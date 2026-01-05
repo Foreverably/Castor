@@ -169,7 +169,7 @@ export async function execute(interaction)
 			quoteFontSize = 34;
 		}
 
-		const avatarURL = targetMessage.author.displayAvatarURL({
+		const avatarURL = (targetMessage.member || targetMessage.author).displayAvatarURL({
 			size: 512,
 			extension: "png",
 			forceStatic: true
