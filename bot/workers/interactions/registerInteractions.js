@@ -42,12 +42,10 @@ export default async function registerInteractions({ client, isProduction })
 				let existing = [];
 				if (scope === "global")
 				{
-					// @ts-ignore
 					existing = await rest.get(Routes.applicationCommands(applicationId));
 				}
 				else if (scope === "guild")
 				{
-					// @ts-ignore
 					existing = await rest.get(Routes.applicationGuildCommands(applicationId, guildId));
 				}
 
@@ -93,8 +91,6 @@ export default async function registerInteractions({ client, isProduction })
 		{
 			const guildId = process.env.DEV_GUILD_ID;
 
-			// In development mode remove global commands to avoid conflicts
-			// (keeps the environment clean and ensures we test guild-only commands)
 			await cleanupOldCommands("global");
 
 			if (!guildId)

@@ -24,14 +24,12 @@ export async function execute(interaction)
 
 	const selectedOpponent = interaction.options.getUser("member");
 
-	// Use actual bot ID when no opponent or opponent is a bot
 	const opponentId = selectedOpponent
 		? (selectedOpponent.bot ? client.user.id : selectedOpponent.id)
 		: client.user.id;
 
 	const isBot = opponentId === client.user.id;
 
-	// Prevent playing against yourself (only if opponent is a real user)
 	if (!isBot && opponentId === interaction.user.id)
 	{
 		return interaction.reply({
@@ -49,7 +47,6 @@ export async function execute(interaction)
 
 	if (existingGame)
 	{
-		// Safely get the other player's ID
 		const otherId = existingGame.opponent?.userId === interaction.user.id
 			? existingGame.challenger?.userId
 			: existingGame.opponent?.userId;

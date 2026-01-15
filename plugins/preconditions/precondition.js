@@ -122,7 +122,7 @@ async function disabled(interaction)
 const denied = disabled;
 
 /**
- * Root export containing precondition checkers and result handlers.
+ * Main export containing precondition checkers and result handlers.
  *
  * @namespace Precondition
  */

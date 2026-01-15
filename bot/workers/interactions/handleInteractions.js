@@ -35,7 +35,6 @@ export default async function handleInteractions({ client })
 	const commandsDir = path.join(process.cwd(), "bot", "commands");
 	const { commands } = await loadCommandsFromDir(commandsDir);
 
-	// populate client.commands map
 	client.commands = client.commands ?? new Map();
 	for (const c of commands)
 	{
@@ -46,7 +45,6 @@ export default async function handleInteractions({ client })
 
 	client.on("interactionCreate", async (interaction) =>
 	{
-		// Chat Input (Slash) Commands
 		if (interaction.isChatInputCommand())
 		{
 			const cmd = client.commands.get(interaction.commandName);
@@ -64,7 +62,6 @@ export default async function handleInteractions({ client })
 			return;
 		}
 
-		// Message Context Menu Commands
 		if (interaction.isMessageContextMenuCommand())
 		{
 			const cmd = client.commands.get(interaction.commandName);
@@ -130,7 +127,6 @@ export default async function handleInteractions({ client })
 					const otherId = isChallenger ? game.opponent.userId : game.challenger.userId;
 					game.currentUser = otherId;
 
-					// Helper to build board string
 					const buildBoard = () =>
 					{
 						const symbols = Array.from({ length: 9 }, (_, i) =>
@@ -144,10 +140,8 @@ export default async function handleInteractions({ client })
 
 					const filledSlots = [ ...game.challenger.positions, ...game.opponent.positions ];
 
-					// If bot needs to move next
 					if (game.isBot && game.currentUser !== interaction.user.id)
 					{
-						// Step 1: Immediately update to show player's move + "thinking"
 						await interaction.update({
 							embeds: [
 								basicEmbed({
@@ -159,10 +153,8 @@ export default async function handleInteractions({ client })
 							components: getTicTacToeButtons(filledSlots, uniqueId)
 						});
 
-						// Step 2: Delay for natural feel
 						await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 seconds
 
-						// Step 3: Bot makes its move
 						const allSlots = Array.from({ length: 9 }, (_, i) => String(i));
 						const taken = [ ...game.challenger.positions, ...game.opponent.positions ];
 						const available = allSlots.filter(s => !taken.includes(s));
@@ -239,7 +231,6 @@ export default async function handleInteractions({ client })
 					}
 				}
 
-				// rps buttons handling
 				else if (customId.startsWith("rps_"))
 				{
 					const parts = customId.split("_");
@@ -293,10 +284,8 @@ export default async function handleInteractions({ client })
 
 					const message = interaction.message;
 
-					// If this was the human's final move and bot needs to respond
 					if (game.opponent?.userId === client.user.id && game.challenger.choice && !game.opponent.choice)
 					{
-						// Step 1: Show "I'm thinking..." immediately
 						await interaction.update({
 							embeds: [
 								basicEmbed({
@@ -305,18 +294,15 @@ export default async function handleInteractions({ client })
 									color: 16231462
 								})
 							],
-							components: message.components // keep buttons for visual consistency
+							components: message.components
 						});
 
-						// Step 2: Subtle delay
 						await new Promise(resolve => setTimeout(resolve, 1500)); // 1.5 seconds
 
-						// Step 3: Bot picks
 						const picks = [ "rock", "paper", "scissors" ];
 						game.opponent.choice = picks[ Math.floor(Math.random() * picks.length) ];
 					}
 
-					// Now both have chosen — game is finished
 					const finished = game.challenger.choice && game.opponent.choice;
 
 					if (finished)
@@ -345,13 +331,11 @@ export default async function handleInteractions({ client })
 							components: row.components.map(btn => ({ ...btn.toJSON(), disabled: true }))
 						}));
 
-						// Remove game
 						const allGames = client.games.get("rps") || {};
 						const newGames = { ...allGames };
 						delete newGames[ uniqueId ];
 						client.games.set("rps", newGames);
 
-						// Final update via message.edit() to avoid InteractionAlreadyReplied
 						await message.edit({
 							embeds: [
 								basicEmbed({
@@ -365,7 +349,6 @@ export default async function handleInteractions({ client })
 					}
 					else
 					{
-						// Still waiting for the other player (human vs human)
 						const challengerStatus = game.challenger.choice ? "Chosen" : "Waiting";
 						const opponentStatus = game.opponent?.userId === client.user.id
 							? (game.opponent.choice ? "Chosen" : "Bot")

@@ -168,9 +168,9 @@ async function renderDiscordMessages(messages)
 
 /**
  * Renders raw HTML/CSS content using Puppeteer for custom graphics.
- * @param {string} htmlContent - The full HTML string to render.
- * @param {object} dimensions - { width: number, height: number } for the viewport.
- * @returns {Promise<Buffer>} The PNG image buffer.
+ * @param {string} htmlContent; the full HTML string to render.
+ * @param {object} dimensions { width: number, height: number } for the viewport.
+ * @returns {Promise<Buffer>} The PNG buffer.
  */
 async function renderRawHtml(htmlContent, dimensions = { width: 1000, height: 500 })
 {
