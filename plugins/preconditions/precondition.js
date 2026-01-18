@@ -21,6 +21,13 @@ const adminRoleIDs = [
 const staffRoleID = "853315383213948938"; // staff
 
 /**
+ * Role ID representing sr mods.
+ * @constant
+ * @type {string}
+ */
+const srModRoleID = "855141054284955688"; // sr mod
+
+/**
  * Combined list of roles allowed to access fun commands.
  * Includes Staff and Admins by default.
  *
@@ -68,6 +75,19 @@ function isStaff(interaction)
 {
 	return isAdmin(interaction) || interaction.member.roles.cache.has(staffRoleID);
 }
+
+/**
+ * Checks whether the user is a sr mod or an admin.
+ *
+ * @function isSrMod
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - The interaction containing user data.
+ * @returns {boolean} Whether the user is sr mod or an admin.
+ */
+function isSrMod(interaction)
+{
+	return isAdmin(interaction) || interaction.member.roles.cache.has(srModRoleID);
+}
+
 
 /**
  * Checks whether the user has permission to access fun commands.
@@ -139,6 +159,7 @@ export const Precondition = {
 	check: {
 		isAdmin,
 		isStaff,
+		isSrMod,
 		hasFunCommandAccess,
 		isVIPCID
 	},
