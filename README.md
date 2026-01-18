@@ -2,7 +2,7 @@
 <h1 align="center">Castor</h1> 
 A fun Discord bot based off of KSJaay's Castor (https://github.com/KSJaay/Alita/tree/Castor). Completely rewritten from the ground up!<br>Made for the No Text to Speech Discord Server (https://discord.gg/ntts)
 <br></br>
-This project is licensed under the MIT License; see [LICENSE](https://github.com/Foreverably/Castor/blob/main/LICENSE) for details.
+This project is licensed under the MIT License; see LICENSE for details.
 
 ---
 
