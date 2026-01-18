@@ -31,24 +31,18 @@ if (fs.existsSync(FILE_PATH))
 else
 {
 	jokes = [
-		"5 ants rented an apartment with another 5 ants. Now they’re tenants.",
-		"What do you call cows on the peak of a mountain?\nThe stakes are high.",
-		"Why shouldn't you write with a broken pencil?\nBecause it's pointless.",
-		"What do you call a factory that makes okay products?\nA satisfactory.",
-		"Why did the scarecrow win an award?\nBecause he was outstanding in his field.",
-		"I would avoid the sushi if I was you. It’s a little fishy.",
-		"Want to hear a joke about construction?\nI’m still working on it.",
-		"I used to play piano by ear, but now I use my hands.",
-		"Why did the bicycle fall over?\nBecause it was two-tired!",
-		"What do you call fake spaghetti?\nAn impasta!",
-		"Why shouldn't you trust trees?\nThey seem shady.",
-		"Where do sheep go on vacation? The Baaaa-hamas.",
-		"What did the tree say when spring finally arrived? What a re-leaf.",
-		"I went to buy a pair of camouflage pants, but I couldn’t find any.",
-		"Where do penguins go to vote? The North Poll.",
-		"Why are libraries so tall? Because they have many stories.",
-		"Why did the Energizer Bunny go to jail? He was charged with battery.",
-		"I asked my dad to name two bodies of water, he said \"Well, damn!\""
+		{ setup: "5 ants rented an apartment with another 5 ants.", punchline: "Now they’re tenants." },
+		{ setup: "What do you call cows on the peak of a mountain?", punchline: "The stakes are high." },
+		{ setup: "Why shouldn't you write with a broken pencil?", punchline: "Because it's pointless." },
+		{ setup: "What do you call a factory that makes okay products?", punchline: "A satisfactory." },
+		{ setup: "Why did the scarecrow win an award?", punchline: "Because he was outstanding in his field." },
+		{ setup: "I would avoid the sushi if I was you.", punchline: "It’s a little fishy." },
+		{ setup: "Want to hear a joke about construction?", punchline: "I’m still working on it." },
+		{ setup: "Why did the bicycle fall over?", punchline: "Because it was two-tired!" },
+		{ setup: "What do you call fake spaghetti?", punchline: "An impasta!" },
+		{ setup: "Why shouldn't you trust trees?", punchline: "They seem shady." },
+		{ setup: "Where do sheep go on vacation?", punchline: "The Baaaa-hamas." },
+		{ setup: "What did the tree say when spring finally arrived?", punchline: "What a re-leaf." }
 	];
 	saveJokes();
 }
@@ -68,9 +62,11 @@ function saveJokes()
 
 export function addJoke(newJoke)
 {
-	if (typeof newJoke !== "string" || newJoke.trim() === "") return false;
-	const trimmed = newJoke.trim();
-	jokes.push(trimmed);
+	if (!newJoke || typeof newJoke !== 'object') return false;
+	jokes.push({
+		setup: newJoke.setup.trim(),
+		punchline: newJoke.punchline.trim()
+	});
 	saveJokes();
 	return true;
 }
@@ -78,26 +74,18 @@ export function addJoke(newJoke)
 export function removeJoke(indexOrText)
 {
 	let removed = false;
-
-	if (typeof indexOrText === "number")
+	const before = jokes.length;
+	if (typeof indexOrText === "number" && indexOrText >= 0 && indexOrText < jokes.length)
 	{
-		if (indexOrText >= 0 && indexOrText < jokes.length)
-		{
-			jokes.splice(indexOrText, 1);
-			removed = true;
-		}
+		jokes.splice(indexOrText, 1);
+		removed = true;
 	}
 	else if (typeof indexOrText === "string")
 	{
-		const before = jokes.length;
-		jokes = jokes.filter(j => j !== indexOrText);
+		jokes = jokes.filter(j => j.setup !== indexOrText);
 		removed = jokes.length < before;
 	}
-
-	if (removed)
-	{
-		saveJokes();
-	}
+	if (removed) saveJokes();
 	return removed;
 }
 

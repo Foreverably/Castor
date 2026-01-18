@@ -18,15 +18,13 @@ export const data = new SlashCommandBuilder()
 			.setName("add")
 			.setDescription("Add a new joke to the collection")
 			.addStringOption(option =>
-				option
-					.setName("setup")
+				option.setName("setup")
 					.setDescription("The setup (e.g., Why did the chicken cross the road?)")
 					.setRequired(true)
 			)
 			.addStringOption(option =>
-				option
-					.setName("punchline")
-					.setDescription("The punchline for the joke")
+				option.setName("punchline")
+					.setDescription("The punchline (e.g., To get to the other side!)")
 					.setRequired(true)
 			)
 	)
@@ -61,9 +59,7 @@ export async function execute(interaction)
 	{
 		const setup = interaction.options.getString("setup", true).trim();
 		const punchline = interaction.options.getString("punchline", true).trim();
-
 		addJoke({ setup, punchline });
-
 		return interaction.reply({
 			content: `Joke added! (total now: ${jokes.length})\n**Setup:** ${setup}\n**Punchline:** ${punchline}`,
 			flags: Flags.EPHEMERAL
