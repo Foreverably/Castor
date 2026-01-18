@@ -28,7 +28,7 @@ function notFoundError()
 }
 
 /**
- * Generates a component layout representing a **403 Forbidden** error message.
+ * Generates a component layout representing a 403 Forbidden error message.
  *
  * @function forbiddenError
  * @returns {ContainerBuilder[]} An array containing a single ContainerBuilder instance

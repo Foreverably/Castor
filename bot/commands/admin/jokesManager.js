@@ -10,7 +10,6 @@ import { Precondition } from "../../../plugins/preconditions/precondition.js";
 import { addJoke, jokes, removeJoke } from "../../../database/jokes.js";
 import { Flags } from "../../../plugins/flags/message.js";
 
-
 export const data = new SlashCommandBuilder()
 	.setName("managejokes")
 	.setDescription("Manage the dad-joke collection")
@@ -45,9 +44,6 @@ export const data = new SlashCommandBuilder()
 			.setDescription("Show all current jokes in the collection")
 	);
 
-/**
- * @param {import("discord.js").ChatInputCommandInteraction} interaction
- */
 export async function execute(interaction)
 {
 	if (!Precondition.check.isSrMod(interaction))

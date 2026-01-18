@@ -51,7 +51,6 @@ export async function execute(interaction)
 		const bottomtext = interaction.options.getString("bottomtext") ?? "";
 		const fontSize = interaction.options.getInteger("fontsize") ?? 32;
 
-		// Validation
 		if (!img)
 		{
 			return interaction.editReply({ content: "Please provide an image." });

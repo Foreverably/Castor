@@ -1,6 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Flags } from "../../plugins/flags/message.js";
 
+// mr stark? Is this really coming soon?
 
 export const data = new SlashCommandBuilder()
 	.setName("help")

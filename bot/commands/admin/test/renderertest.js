@@ -4,6 +4,8 @@ import { renderDiscordMessages } from "../../../../web/messageRenderer.js";
 import { buttonStyles, buttonTypes } from "../../../../web/buttonTypes.js";
 import { Precondition } from "../../../../plugins/preconditions/precondition.js";
 
+// mr stark, remove this
+
 export const data = new SlashCommandBuilder()
 	.setName("renderpingtest")
 	.setDescription("Replies with Pong! as a rendered image.");

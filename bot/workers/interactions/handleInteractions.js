@@ -1,7 +1,3 @@
-/**
- * Attaches interaction handlers to the client.
- * Expects command modules loaded via loadCommandsFromDir to export `data` and `execute(interaction)`.
- */
 import path from "path";
 import { loadCommandsFromDir } from "./loadCommands.js";
 import { Flags } from "../../../plugins/flags/message.js";

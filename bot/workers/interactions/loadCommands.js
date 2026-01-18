@@ -1,10 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
-/**
- * Recursively loads command modules from a directory.
- * Returns an array of { filePath, module, data } objects and an array of JSON-ready command data.
- */
 export async function loadCommandsFromDir(commandsDir)
 {
 	const commands = [];
@@ -19,7 +15,8 @@ export async function loadCommandsFromDir(commandsDir)
 			if (entry.isDirectory())
 			{
 				await walk(full);
-			} else if (entry.isFile() && (full.endsWith('.js') || full.endsWith('.mjs') || full.endsWith('.cjs')))
+			}
+			else if (entry.isFile() && (full.endsWith(".js") || full.endsWith(".mjs") || full.endsWith(".cjs")))
 			{
 				try
 				{
@@ -30,7 +27,8 @@ export async function loadCommandsFromDir(commandsDir)
 						commands.push({ filePath: full, module: mod, data });
 						commandsJson.push(data.toJSON ? data.toJSON() : data);
 					}
-				} catch (err)
+				}
+				catch (err)
 				{
 					console.warn(`Failed to import command ${full}:`, err.message || err);
 				}
@@ -41,7 +39,8 @@ export async function loadCommandsFromDir(commandsDir)
 	try
 	{
 		await walk(commandsDir);
-	} catch (err)
+	}
+	catch (err)
 	{
 		console.warn(`Failed to read commands directory ${commandsDir}:`, err.message || err);
 	}

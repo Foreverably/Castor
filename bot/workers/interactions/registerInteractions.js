@@ -2,15 +2,6 @@ import path from "path";
 import { REST, Routes } from "discord.js";
 import { loadCommandsFromDir } from "./loadCommands.js";
 
-/**
- * Registers slash commands with Discord.
- * Expects environment variables:
- * - app_token (production bot token)
- * - dev_app_token (development bot token)
- * - DEV_GUILD_ID (optional, for faster dev deployment)
- *
- * Options: { client, isProduction }
- */
 export default async function registerInteractions({ client, isProduction })
 {
 	const commandsPath = path.join(process.cwd(), "bot", "commands");
