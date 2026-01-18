@@ -4,7 +4,7 @@ import { loadCommandsFromDir } from "./loadCommands.js";
 
 export default async function registerInteractions({ client, isProduction })
 {
-	const commandsPath = path.join(process.cwd(), "bot", "commands");
+	const commandsPath = path.join(process.cwd(), "src", "bot", "commands");
 	const { commandsJson } = await loadCommandsFromDir(commandsPath);
 
 	if (!commandsJson || commandsJson.length === 0)

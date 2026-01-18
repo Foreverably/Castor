@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 
-const FILE_PATH = "database/data/jokes.json";
+const FILE_PATH = "src/database/data/jokes.json";
 
 const dataDir = path.dirname(FILE_PATH);
 if (!fs.existsSync(dataDir))

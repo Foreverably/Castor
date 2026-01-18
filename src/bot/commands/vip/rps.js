@@ -1,7 +1,7 @@
 import { SlashCommandBuilder } from "discord.js";
 import { Flags } from "../../../plugins/flags/message.js";
 import { addRpsGameData, getUniqueRpsId } from "../../../database/games/rps.js";
-import { client } from "../../../index.js";
+import { client } from "../../../../index.js";
 import { basicEmbed } from "../../../plugins/msg/templates/embeds.js";
 import createButtons from "../../../database/ui/buttons.js";
 import { Precondition } from "../../../plugins/preconditions/precondition.js";

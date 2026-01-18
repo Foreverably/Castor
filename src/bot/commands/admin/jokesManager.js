@@ -19,11 +19,15 @@ export const data = new SlashCommandBuilder()
 			.setDescription("Add a new joke to the collection")
 			.addStringOption(option =>
 				option
-					.setName("text")
-					.setDescription("The joke text (keep it short & funny)")
+					.setName("setup")
+					.setDescription("The setup (e.g., Why did the chicken cross the road?)")
 					.setRequired(true)
-					.setMinLength(8)
-					.setMaxLength(300)
+			)
+			.addStringOption(option =>
+				option
+					.setName("punchline")
+					.setDescription("The punchline for the joke")
+					.setRequired(true)
 			)
 	)
 	.addSubcommand(subcommand =>
@@ -55,20 +59,13 @@ export async function execute(interaction)
 
 	if (subcommand === "add")
 	{
-		const text = interaction.options.getString("text", true).trim();
+		const setup = interaction.options.getString("setup", true).trim();
+		const punchline = interaction.options.getString("punchline", true).trim();
 
-		if (text.length < 8)
-		{
-			return interaction.reply({
-				content: "❌ That joke is too short. Try something funnier!",
-				flags: Flags.EPHEMERAL
-			});
-		}
-
-		addJoke(text);
+		addJoke({ setup, punchline });
 
 		return interaction.reply({
-			content: `Joke added! (total now: ${jokes.length})\n\`\`\`\n${text}\n\`\`\``,
+			content: `Joke added! (total now: ${jokes.length})\n**Setup:** ${setup}\n**Punchline:** ${punchline}`,
 			flags: Flags.EPHEMERAL
 		});
 	}
@@ -80,7 +77,7 @@ export async function execute(interaction)
 		if (index < 0 || index >= jokes.length)
 		{
 			return interaction.reply({
-				content: `❌ Invalid index. Use /joke list to see valid numbers (0 to ${jokes.length - 1}).`,
+				content: `❌ Invalid index. Use \`/managejokes list\` to see valid numbers (0 to ${jokes.length - 1}).`,
 				flags: Flags.EPHEMERAL
 			});
 		}
@@ -90,7 +87,7 @@ export async function execute(interaction)
 
 
 		return interaction.reply({
-			content: `Removed joke #${index}:\n\`\`\`\n${removed}\n\`\`\`\n(total now: ${jokes.length})`,
+			content: `Removed joke #${index}:\n> ${removed.setup}\n> ||${removed.punchline}||\n(total now: ${jokes.length})`,
 			flags: Flags.EPHEMERAL
 		});
 	}
@@ -104,7 +101,7 @@ export async function execute(interaction)
 			});
 		}
 
-		const itemsPerPage = 10;
+		const itemsPerPage = 5;
 		const totalPages = Math.ceil(jokes.length / itemsPerPage);
 		let currentPage = 0;
 
@@ -125,7 +122,7 @@ export async function execute(interaction)
 			const descriptionLines = pageItems.map((joke, idx) =>
 			{
 				const globalIndex = start + idx;
-				return `${globalIndex}. (i: \`${globalIndex}\`) ${joke.replace(/\n/g, " ")}`;
+				return `**${globalIndex}.** ${joke.setup}\n   *${joke.punchline}*`;
 			});
 
 			embed.setDescription(descriptionLines.join("\n") || "(empty page?)");

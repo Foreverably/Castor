@@ -2,7 +2,7 @@ import { SlashCommandBuilder } from "discord.js";
 import { addTicTacToeGameData, getTicTacToeButtons, getUniqueTicTacToeId } from "../../../tools/commands/tictactoe.js";
 import { Flags } from "../../../plugins/flags/message.js";
 import { basicEmbed } from "../../../plugins/msg/templates/embeds.js";
-import { client } from "../../../index.js";
+import { client } from "../../../../index.js";
 import { Precondition } from "../../../plugins/preconditions/precondition.js";
 
 export const data = new SlashCommandBuilder()

@@ -3,7 +3,7 @@ import { Precondition } from "../../../plugins/preconditions/precondition.js";
 import fs from "node:fs";
 import path from "node:path";
 
-const JOKES_PATH = path.join(process.cwd(), "database/data/jokes.json");
+const JOKES_PATH = path.join(process.cwd(), "src/database/data/jokes.json");
 
 function getRandomJoke()
 {
@@ -44,9 +44,42 @@ export async function execute(interaction)
 	}
 
 	const joke = getRandomJoke();
+	if (typeof joke === "string")
+	{
+		await interaction.reply({ content: joke, ephemeral: true });
+		return;
+	}
+	const setupText = joke.setup || joke.question;
+	const punchlineText = joke.punchline || joke.answer;
 
-	await interaction.reply({
-		content: joke,
-		allowedMentions: { parse: [] }
-	});
+	if (!setupText || !punchlineText)
+	{
+		console.error("Joke object is missing keys:", joke);
+		await interaction.reply({
+			content: "Error: This joke is formatted incorrectly in the database.",
+			ephemeral: true
+		});
+		return;
+	}
+
+	await interaction.reply(`${setupText}`);
+	const filter = (m) => m.author.id === interaction.user.id;
+	try
+	{
+		const collected = await interaction.channel.awaitMessages({
+			filter,
+			max: 1,
+			time: 30000,
+			errors: [ "time" ]
+		});
+
+		const userReply = collected.first();
+		await interaction.followUp(`**${punchlineText}** <a:rofl:1462537038237663555>`);
+
+	}
+	catch (error)
+	{
+		await interaction.followUp(`Too slow! The answer was: **${punchlineText}**`);
+
+	}
 }

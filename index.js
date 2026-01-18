@@ -4,8 +4,8 @@ import dotenv from "dotenv";
 import mongoose from "mongoose";
 
 import { isProduction } from "./config.js";
-import registerInteractions from "./bot/workers/interactions/registerInteractions.js";
-import handleInteractions from "./bot/workers/interactions/handleInteractions.js";
+import registerInteractions from "./src/bot/workers/interactions/registerInteractions.js";
+import handleInteractions from "./src/bot/workers/interactions/handleInteractions.js";
 
 dotenv.config();
 

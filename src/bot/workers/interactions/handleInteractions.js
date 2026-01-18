@@ -28,7 +28,7 @@ function handleInteractionError(interaction)
 
 export default async function handleInteractions({ client })
 {
-	const commandsDir = path.join(process.cwd(), "bot", "commands");
+	const commandsDir = path.join(process.cwd(), "src", "bot", "commands");
 	const { commands } = await loadCommandsFromDir(commandsDir);
 
 	client.commands = client.commands ?? new Map();

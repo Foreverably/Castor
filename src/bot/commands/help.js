@@ -22,7 +22,7 @@ export async function execute(interaction)
 	const page = interaction.options.getString("page") || "info";
 
 	interaction.reply({
-		content: `-# coming soon`,
+		content: `-# coming soon? Is it really??`,
 		flags: Flags.EPHEMERAL
 	});
 }
