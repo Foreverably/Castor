@@ -12,7 +12,7 @@
   "dependencies": {
     "@skyra/discord-components-core": "^4.0.2",
     "@types/node": "^24.8.1",
-    "axios": "^1.13.1",
+    "axios": "^1.13.5",
     "canvas": "^3.2.0",
     "discord.js": "^14.23.2",
     "dotenv": "^17.2.3",
