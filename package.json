@@ -14,14 +14,12 @@
     "@eslint/js": "^10.0.1",
     "@skyra/discord-components-core": "^4.0.2",
     "@types/node": "^24.8.1",
-    "canvas": "^3.2.0",
     "discord.js": "^14.23.2",
     "dotenv": "^17.2.3",
     "eslint": "^10.1.0",
     "globals": "^17.4.0",
     "mongoose": "^8.19.2",
     "nanoid": "^5.1.6",
-    "node-html-to-image": "^5.0.0",
     "puppeteer": "^24.25.0",
     "typescript": "^5.9.3"
   }
