@@ -1,5 +1,4 @@
 import { AttachmentBuilder, SlashCommandBuilder } from "discord.js";
-import axios from "axios";
 import { Category } from "../../../common/command/enums.js";
 
 /** @type {import("../../../common/schema.js").CommandData} */
@@ -71,22 +70,28 @@ export const data = {
 			}
 
 			const url = "https://castor_webserver.guiki.pt/fun/meme";
-
-			const resp = await axios.post(
-				url,
-				{ img, toptext, bottomtext, fontsize: fontSize },
-				{
-					responseType: "arraybuffer",
-					timeout: 60000,
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 60000);
+			let buffer;
+			try {
+				const resp = await fetch(url, {
+					method: 'POST',
+					signal: controller.signal,
 					headers: {
-						"JASPER-API-KEY": process.env.JASPER_API_KEY,
+						'Content-Type': 'application/json',
+						'JASPER-API-KEY': process.env.JASPER_API_KEY,
 					},
-				},
-			);
-
-			const buffer = Buffer.from(resp.data);
+					body: JSON.stringify({img, toptext, bottomtext, fontsize: fontSize}),
+				});
+				if (!resp.ok) {
+					throw new Error(`API Error: ${resp.status} ${resp.statusText}`);
+				}
+				const arrayBuffer = await resp.arrayBuffer();
+				buffer = Buffer.from(arrayBuffer);
+			} finally {
+				clearTimeout(timeoutId);
+			}
 			const attachment = new AttachmentBuilder(buffer, { name: "meme.png" });
-
 			return interaction.editReply({
 				content: "-# Generated!",
 				files: [attachment],
@@ -96,7 +101,7 @@ export const data = {
 		{
 			console.error(
 				"meme command error:",
-				error?.response?.data?.toString() ?? error,
+				error.message || error
 			);
 
 			const replyContent = "Failed to generate meme image.";
