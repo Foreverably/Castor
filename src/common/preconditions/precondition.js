@@ -8,7 +8,8 @@ import { Flags } from "../flags/message.js";
  */
 const adminRoleIDs = [
 	"820748705761329224", // NTTS
-	"1221608852676677732", // Admins
+	"1221608852676677732", // Server Manager
+	"832813071285616680", // Admins
 	"1312570653026811924", // Bot Developers
 	"1417983554104721419"
 ];
