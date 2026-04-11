@@ -1,6 +1,13 @@
 import { Error } from "../msg/templates/errors.js";
 import { Flags } from "../flags/message.js";
 
+
+const developmentRoleIDs = [
+	"1483658247482249337",
+	"1483658247364673606",
+	"1483658247482249330"
+];
+
 /**
  * List of admin role IDs allowed to access elevated commands.
  * @constant
@@ -42,6 +49,19 @@ const accessToFunCommandsRoleID = [
 	staffRoleID,
 	...adminRoleIDs
 ];
+
+
+/**
+ * Checks if the person has a development role id.
+ *
+ * @function isAdmin
+ * @param {import("discord.js").ChatInputCommandInteraction} interaction - The interaction containing user data.
+ * @returns {boolean} Whether the user has a development role.
+ */
+function hasDevelopmentRole(interaction)
+{
+	return interaction.member.roles.cache.some(role => developmentRoleIDs.includes(role.id)) || interaction.member.permissions.has("Administrator");
+}
 
 /**
  * Channel ID representing the VIP channel.
@@ -158,6 +178,7 @@ export const Precondition = {
 	 * @property {Function} hasFunCommandAccess - Checks whether the user has access to fun commands.
 	 */
 	check: {
+		hasDevelopmentRole,
 		isAdmin,
 		isStaff,
 		isSrMod,

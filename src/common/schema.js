@@ -5,6 +5,7 @@
  * @property {boolean} [isStaff] - Access restricted to staff members.
  * @property {boolean} [isSrMod] - Access restricted to senior moderators.
  * @property {boolean} [isAdmin] - Access restricted to administrators.
+ * @property {boolean} [hasDevelopmentRole] - Access restricted to development roles.
  */
 
 /**
