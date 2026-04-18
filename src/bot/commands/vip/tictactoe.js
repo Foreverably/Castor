@@ -1,5 +1,10 @@
 import { SlashCommandBuilder } from "discord.js";
-import { addTicTacToeGameData, getTicTacToeButtons, getUniqueTicTacToeId } from "../../../utils/interactions/tictactoe.js";
+import {
+	addTicTacToeGameData,
+	getTicTacToeButtons,
+	getUniqueTicTacToeId,
+	getBoardString
+} from "../../../utils/interactions/tictactoe.js";
 import { Flags } from "../../../common/flags/message.js";
 import { basicEmbed } from "../../../common/msg/templates/embeds.js";
 import { client } from "../../../../index.js";
@@ -11,7 +16,8 @@ export const data = {
 	category: Category.VIP,
 	description: "Play a game of tic-tac-toe against another user!",
 	constraints: {
-		isVIP: true
+		isVIP: false,
+		hasDevelopmentRole: true
 	},
 	options: new SlashCommandBuilder()
 		.addUserOption((option) =>
@@ -20,7 +26,7 @@ export const data = {
 				.setDescription("The user to play against (leave empty to play against the bot)")
 				.setRequired(false)
 		),
-	execute(interaction) 
+	execute(interaction)
 	{
 		const selectedOpponent = interaction.options.getUser("member");
 
@@ -42,7 +48,7 @@ export const data = {
 		const existingGame = Object.values(tictactoeGames).find(
 			(game = {}) =>
 				game.opponent?.userId === interaction.user.id ||
-			game.challenger?.userId === interaction.user.id
+				game.challenger?.userId === interaction.user.id
 		);
 
 		if (existingGame)
@@ -66,7 +72,7 @@ export const data = {
 			embeds: [
 				basicEmbed({
 					author: { name: "TicTacToe" },
-					description: `The ultimate game of TicTacToe between <@${interaction.user.id}> and ${opponentMention}.\n\nWaiting for <@${interaction.user.id}> to choose\n\n⬜ ⬜ ⬜\n⬜ ⬜ ⬜\n⬜ ⬜ ⬜`,
+					description: `The ultimate game of TicTacToe between <@${interaction.user.id}> and ${opponentMention}.\n\nWaiting for <@${interaction.user.id}> to choose\n\n${getBoardString([], [])}`,
 					color: 16231462
 				})
 			],
