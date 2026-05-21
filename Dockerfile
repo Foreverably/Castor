@@ -25,6 +25,8 @@ RUN apt-get update \
 
 # Let puppeteer / the app know where chromium is installed
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+# Run in production mode inside the container
+ENV NODE_ENV=production
 
 # Create app directory
 WORKDIR /usr/src/app
@@ -40,6 +42,5 @@ COPY . .
 
 # If you use an .env file for tokens/config, mount it at runtime or copy it here (not recommended to bake secrets in image)
 
-# Default command (uses the "start" script from package.json)
-CMD ["npm", "start"]
-
+# Default command: run the app directly with node to avoid running ESLint at container start
+CMD ["node", "."]
