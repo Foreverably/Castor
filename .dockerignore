@@ -1,0 +1,76 @@
+# Version control
+.git
+.gitignore
+
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+
+# IDE and editor files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+jsconfig.json
+
+# Logs
+logs
+*.log
+
+# Testing and coverage
+coverage
+.nyc_output
+
+# Build artifacts
+dist
+build
+
+# Cache directories
+.npm
+.eslintcache
+.cache
+.parcel-cache
+
+# Config files that shouldn't be in container
+eslint.config.js
+
+# Documentation
+README.md
+LICENSE
+
+# CI/CD
+.github
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Database files
+*.db
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Temporary files
+*.tmp
+*.temp
+
+# Docker files
+Dockerfile
+.dockerignore
