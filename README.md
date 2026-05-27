@@ -3,6 +3,10 @@
 A fun Discord bot based off of KSJaay's Castor (https://github.com/KSJaay/Alita/tree/Castor). Completely rewritten from the ground up!<br>Made for the No Text to Speech Discord Server (https://discord.gg/ntts)
 <br></br>
 This project is licensed under the MIT License; see LICENSE for details.
+<br></br>
+
+> [!warning]
+> Castor is getting a full rewrite in TypeScript and wont rely on the Go WebServer for image manipulation. <br></br>Changes will be in the [beta branch](https://github.com/Foreverably/Castor/tree/beta) before they are fully pushed to main.
 
 ---
 
