@@ -28,7 +28,7 @@ export const data = {
 		),
 	async execute(interaction) {
 		try {
-			await interaction.reply({ content: "Generating caption image..." });
+			await interaction.reply({ content: "Generating speech bubble image..." });
 
 			const imgAttachment = interaction.options.getAttachment("img");
 			const img = imgAttachment?.url;
@@ -56,15 +56,16 @@ export const data = {
 						'Content-Type': 'application/json',
 						'JASPER-API-KEY': process.env.JASPER_API_KEY,
 					},
-					body: JSON.stringify({img, position}),
+					body: JSON.stringify({ img, position }),
 				});
 				if (!resp.ok) {
 					throw new Error(`API Error: ${resp.status} ${resp.statusText}`);
 				}
-				buffer = await resp.arrayBuffer();
+				const arrayBuffer = await resp.arrayBuffer();
+				buffer = Buffer.from(arrayBuffer);
 			} finally {
-					clearTimeout(timeoutId);
-				}
+				clearTimeout(timeoutId);
+			}
 			const attachment = new AttachmentBuilder(buffer, {
 				name: "speechbubble.png",
 			});
