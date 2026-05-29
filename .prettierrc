@@ -1,0 +1,12 @@
+{
+	"tabWidth": 4,
+	"useTabs": false,
+	"semi": true,
+	"singleQuote": false,
+	"bracketSpacing": true,
+	"arrowParens": "always",
+	"trailingComma": "all",
+	"printWidth": 100,
+	"plugins": ["prettier-plugin-brace-style"],
+	"braceStyle": "allman"
+  }
