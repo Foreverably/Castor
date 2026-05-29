@@ -2,8 +2,8 @@
   "name": "castor",
   "version": "3.0.0",
   "description": "Discord.JS bot designed for minigames in the No Text To Speech Discord server.",
-  "author": "Forwynn",
-  "type": "module",
+  "main": "dist/index.js",
+  "author": "Forwynn", 
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "prestart": "npm run build",
