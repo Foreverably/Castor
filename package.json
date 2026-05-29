@@ -2,7 +2,6 @@
   "name": "castor",
   "version": "3.0.0",
   "description": "Discord.JS bot designed for minigames in the No Text To Speech Discord server.",
-  "main": "dist/index.js",
   "author": "Forwynn",
   "type": "module",
   "scripts": {
