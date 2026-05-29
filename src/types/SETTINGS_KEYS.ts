@@ -14,7 +14,7 @@ export const SettingsKeys = {
     /**
      * Role that is allowed to use staff only commands
      */
-    staffRole: "role.staffRole",
+    staffRole: "roles.staffRole",
     /**
      * @deprecated No longer used, logging is handled by the logging service
      */

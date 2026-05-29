@@ -13,6 +13,9 @@ export default class BamMessageCommand extends BaseMessageCommand
             description: "Bam someone!",
             category: CommandCategory.FUN,
             cooldown: 10,
+            constraints: {
+                staffOnly: true,
+            },
             usage: "bam [user] [reason]",
         });
     }
@@ -75,7 +78,9 @@ export default class BamMessageCommand extends BaseMessageCommand
         }
 
         const botMember = message.guild?.members.me;
-        const canDelete = botMember?.permissionsIn(message.channel).has(PermissionsBitField.Flags.ManageMessages);
+        const canDelete = botMember
+            ?.permissionsIn(message.channel)
+            .has(PermissionsBitField.Flags.ManageMessages);
         if (canDelete) await message.delete().catch(() => null);
 
         const embed = new EmbedBuilder()

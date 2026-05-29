@@ -12,6 +12,9 @@ export default class UwuifyMessageCommand extends BaseMessageCommand
             description: "Turn any text into cute, uwuified text!",
             category: CommandCategory.FUN,
             cooldown: 5,
+            constraints: {
+                staffOnly: true,
+            },
             usage: "uwu [text]",
         });
     }

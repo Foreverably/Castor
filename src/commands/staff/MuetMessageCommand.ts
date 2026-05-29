@@ -13,6 +13,9 @@ export default class MuetMessageCommand extends BaseMessageCommand
             description: "Muet someone!",
             category: CommandCategory.FUN,
             cooldown: 10,
+            constraints: {
+                staffOnly: true,
+            },
             usage: "muet [user] [reason]",
         });
     }
@@ -75,7 +78,9 @@ export default class MuetMessageCommand extends BaseMessageCommand
         }
 
         const botMember = message.guild?.members.me;
-        const canDelete = botMember?.permissionsIn(message.channel).has(PermissionsBitField.Flags.ManageMessages);
+        const canDelete = botMember
+            ?.permissionsIn(message.channel)
+            .has(PermissionsBitField.Flags.ManageMessages);
         if (canDelete) await message.delete().catch(() => null);
 
         const embed = new EmbedBuilder()
