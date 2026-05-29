@@ -25,4 +25,4 @@ COPY --from=builder /app/dist ./dist
 
 COPY src/utils/web/speechbubble/speechbubble.png ./src/utils/web/speechbubble/speechbubble.png
 
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/index.js", "--deploy"]
