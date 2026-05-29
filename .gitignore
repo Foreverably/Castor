@@ -1,6 +1,3 @@
-# Created by https://www.toptal.com/developers/gitignore/api/visualstudiocode,macos,dotenv,database,node
-# Edit at https://www.toptal.com/developers/gitignore?templates=visualstudiocode,macos,dotenv,database,node
-
 ### Database ###
 *.accdb
 *.db
@@ -212,5 +209,3 @@ commands/Applications/forms/*
 .idea*
 .vscode
 jsconfig.json
-
-badslurs.js
