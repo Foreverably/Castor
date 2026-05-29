@@ -120,6 +120,23 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
                     }
                 }
 
+                if (command.constraints.staffOnly && interaction.inGuild())
+                {
+                    const staffRole = await Settings.get<string | string[]>(SettingsKeys.staffRole);
+                    const staffRoles = Array.isArray(staffRole) ? staffRole : staffRole ? [staffRole] : [];
+                    const hasStaffRole = staffRoles.some((role) =>
+                        (interaction.member as GuildMember).roles.cache.has(role),
+                    );
+                    if (!hasStaffRole)
+                    {
+                        await interaction.reply({
+                            content: "This command is only available to staff members.",
+                            flags: MessageFlags.Ephemeral,
+                        });
+                        return;
+                    }
+                }
+
                 if (command.constraints.vipChannel && interaction.inGuild())
                 {
                     let vipChannelId = await Settings.get<string | string[]>(

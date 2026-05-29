@@ -12,6 +12,10 @@ export const SettingsKeys = {
      */
     allowedRestrictedFunCommandRoles: "roles.allowedRestrictedFunCommandRoles",
     /**
+     * Role that is allowed to use staff only commands
+     */
+    staffRole: "role.staffRole",
+    /**
      * @deprecated No longer used, logging is handled by the logging service
      */
     internalLog: "channels.internalLog",

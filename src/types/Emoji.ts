@@ -7,6 +7,6 @@
  */
 export enum CustomEmoji
 {
-	loading = "<a:loading:1508597963662823444>"
-
+    loading = "<a:loading:1508597963662823444>",
+    check = "<:check:1510023211889459210>",
 }

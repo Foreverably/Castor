@@ -32,6 +32,7 @@ export interface SlashCommandOptions
     constraints?: {
         vipChannel?: boolean;
         restrictedFunCommands?: boolean;
+        staffOnly?: boolean;
     };
     construct: () =>
         | SlashCommandBuilder
@@ -79,6 +80,7 @@ export abstract class BaseSlashCommand
     public readonly constraints: {
         vipChannel?: boolean;
         restrictedFunCommands?: boolean;
+        staffOnly?: boolean;
     };
     public readonly data: SlashCommandBuilder | ContextMenuCommandBuilder;
     protected readonly client: ExtendedClient;

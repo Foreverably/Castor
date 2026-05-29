@@ -16,6 +16,7 @@ export interface MessageCommandOptions
     constraints?: {
         vipChannel?: boolean;
         restrictedFunCommands?: boolean;
+        staffOnly?: boolean;
     };
 }
 
@@ -34,6 +35,7 @@ export abstract class BaseMessageCommand
     public readonly constraints: {
         vipChannel?: boolean;
         restrictedFunCommands?: boolean;
+        staffOnly?: boolean;
     };
 
     constructor(client: ExtendedClient, options: MessageCommandOptions)
