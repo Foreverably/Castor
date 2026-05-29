@@ -4,6 +4,7 @@
   "description": "Discord.JS bot designed for minigames in the No Text To Speech Discord server.",
   "main": "dist/index.js",
   "author": "Forwynn",
+  "type": "module",
   "scripts": {
     "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
     "prestart": "npm run build",

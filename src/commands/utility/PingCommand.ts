@@ -14,7 +14,7 @@ import { AnsiBrightFg, AnsiFg, AnsiStyle, Language, Markdown } from "@/utils/dis
 import os from "os";
 import fetch from "node-fetch";
 import { DiscordStatusResponse } from "@/types/DiscordStatusResponse";
-import mariadb from "mariadb";
+import * as mariadb from "mariadb";
 import mongoose from "mongoose";
 import { chromium } from "playwright-core";
 

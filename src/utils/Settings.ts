@@ -1,4 +1,4 @@
-import mariadb, { Pool, PoolConnection } from "mariadb";
+import { createPool, Pool, PoolConnection } from "mariadb";
 import { Logger } from "./Logger";
 import { SettingsKeys } from "@/types/SETTINGS_KEYS";
 
@@ -52,7 +52,7 @@ class SettingsManager
             throw new Error("MARIADB_URI (or MARIADB_URL) is not defined in environment variables");
         }
 
-        this.pool = mariadb.createPool(uri);
+        this.pool = createPool(uri);
     }
 
     public static getInstance(): SettingsManager

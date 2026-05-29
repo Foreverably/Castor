@@ -1,4 +1,4 @@
-import mariadb, { Pool, PoolConnection } from "mariadb";
+import { createPool, Pool, PoolConnection } from "mariadb";
 import { Logger } from "./Logger";
 
 export interface DadJoke
@@ -25,7 +25,7 @@ class JokesDatabaseManager
             throw new Error("MARIADB_URI is not defined in environment variables");
         }
 
-        this.pool = mariadb.createPool(uri);
+        this.pool = createPool(uri);
     }
 
     public static getInstance(): JokesDatabaseManager
