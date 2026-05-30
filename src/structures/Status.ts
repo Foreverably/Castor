@@ -20,17 +20,17 @@ export class Status
         this.client = client;
         this.statuses = [
             {
-                name: "creating bugs for fun",
+                name: "poker with Espie and Wobin",
                 type: ActivityType.Competing,
                 status: "online",
             },
             {
-                name: `people fail reporting bugs`,
+                name: `people gamble their tokens`,
                 type: ActivityType.Watching,
                 status: "online",
             },
             {
-                name: `people love fixing bugs`,
+                name: `to commands`,
                 type: ActivityType.Listening,
                 status: "online",
             },
