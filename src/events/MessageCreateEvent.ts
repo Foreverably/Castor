@@ -30,9 +30,9 @@ export default class MessageCreateEvent extends BaseEvent<Events.MessageCreate>
         {
             prefixUsed = this.prefix;
         }
-        else if (message.content.startsWith("?"))
+        else if (message.content.startsWith("+"))
         {
-            prefixUsed = "?";
+            prefixUsed = "+";
         }
 
         if (prefixUsed === null) return;
