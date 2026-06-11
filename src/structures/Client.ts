@@ -29,8 +29,6 @@ export class ExtendedClient extends Client
                 GatewayIntentBits.Guilds,
                 GatewayIntentBits.GuildMessages,
                 GatewayIntentBits.MessageContent,
-                GatewayIntentBits.GuildMembers,
-                GatewayIntentBits.GuildModeration,
                 GatewayIntentBits.GuildMessageReactions,
             ],
             partials: [Partials.Message, Partials.Channel, Partials.User, Partials.Reaction],
