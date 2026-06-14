@@ -3,12 +3,18 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { activeRpsGames, generateUniqueId } from "@/utils/Games";
 import { ComponentFactory } from "@/utils/ComponentFactory";
 import { MessageFlags, ActionRowBuilder, ButtonBuilder } from "discord.js";
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class RpsCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -16,13 +22,8 @@ export default class RpsCommand extends BaseSlashCommand
         super(client, {
             name: "rps",
             description: "Play a game of rock-paper-scissors!",
-            category: CommandCategory.VIP,
             cooldown: 5,
             usage: "/rps [member]",
-            permissions: [],
-            constraints: {
-                vipChannel: true,
-            },
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("rps")

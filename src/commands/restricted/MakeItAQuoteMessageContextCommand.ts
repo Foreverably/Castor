@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    RestrictedFunCommands,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import {
@@ -13,6 +17,8 @@ import {
 } from "discord.js";
 import { chromium } from "playwright-core";
 
+@Category(CommandCategory.FUN)
+@RestrictedFunCommands()
 export default class MakeItAQuoteMessageContextCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -20,11 +26,7 @@ export default class MakeItAQuoteMessageContextCommand extends BaseSlashCommand
         super(client, {
             name: "Make it a Quote",
             description: "Create a visual quote from a user's message.",
-            category: CommandCategory.FUN,
             cooldown: 5,
-            constraints: {
-                restrictedFunCommands: true,
-            },
             usage: "Right-click message -> Apps -> Make it a Quote",
             construct: () =>
                 new ContextMenuCommandBuilder()

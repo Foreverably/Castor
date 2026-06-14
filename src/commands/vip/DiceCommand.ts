@@ -3,12 +3,18 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { Delay } from "@/utils/Delay";
 import { ContainerBuilder, MessageFlags, SeparatorSpacingSize } from "discord.js";
 import { CustomEmoji } from "@/types/Emoji";
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class DiceCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -16,13 +22,8 @@ export default class DiceCommand extends BaseSlashCommand
         super(client, {
             name: "dice",
             description: "Roll a dice and guess the number!",
-            category: CommandCategory.VIP,
             cooldown: 5,
-            constraints: {
-                vipChannel: true,
-            },
             usage: "/dice <number>",
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("dice")

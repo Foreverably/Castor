@@ -18,22 +18,16 @@ import {
 } from "discord.js";
 import { ExtendedClient } from "../../Client";
 import { CommandCategory } from "../../../types/CommandCategories";
+import { COMMAND_META, CommandDecoratorMetadata } from "./CommandDecorators";
 
 export interface SlashCommandOptions
 {
     name: string;
     description: string;
-    category: CommandCategory;
     cooldown?: number;
     usage?: string;
-    permissions?: string[];
     devOnly?: boolean;
     guildOnly?: boolean;
-    constraints?: {
-        vipChannel?: boolean;
-        restrictedFunCommands?: boolean;
-        staffOnly?: boolean;
-    };
     construct: () =>
         | SlashCommandBuilder
         | SlashCommandOptionsOnlyBuilder
@@ -90,19 +84,23 @@ export abstract class BaseSlashCommand
         this.client = client;
         this.name = options.name;
         this.description = options.description;
-        this.category = options.category;
         this.cooldown = options.cooldown || 0;
         this.usage = options.usage || "";
-        this.permissions = options.permissions
-            ? options.permissions.map(
+        this.devOnly = options.devOnly || false;
+        this.guildOnly = options.guildOnly || false;
+        this.data = options.construct() as SlashCommandBuilder | ContextMenuCommandBuilder;
+
+        const meta: CommandDecoratorMetadata =
+            (this.constructor as any)[COMMAND_META] || {};
+
+        this.category = meta.category!;
+        this.permissions = meta.permissions
+            ? meta.permissions.map(
                   (perm) =>
                       PermissionsBitField.Flags[perm as keyof typeof PermissionsBitField.Flags],
               )
             : [];
-        this.devOnly = options.devOnly || false;
-        this.guildOnly = options.guildOnly || false;
-        this.constraints = options.constraints || {};
-        this.data = options.construct() as SlashCommandBuilder | ContextMenuCommandBuilder;
+        this.constraints = meta.constraints || {};
     }
 
     public abstract execute(interaction: any): Promise<void>;

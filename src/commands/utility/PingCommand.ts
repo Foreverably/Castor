@@ -1,5 +1,6 @@
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
+import { Category, Permissions } from "@/structures/base/commands/CommandDecorators";
 import {
     ActionRowBuilder,
     ButtonBuilder,
@@ -121,6 +122,8 @@ async function checkMongoDB(): Promise<ServiceHealth>
     }
 }
 
+@Category(CommandCategory.DEVELOPER)
+@Permissions("Administrator")
 export default class PingCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -128,11 +131,9 @@ export default class PingCommand extends BaseMessageCommand
         super(client, {
             name: "ping",
             description: "Replies with Pong!",
-            category: CommandCategory.DEVELOPER,
             aliases: ["pong"],
             cooldown: 5,
             usage: "ping [--detailed | -d]",
-            permissions: ["Administrator"],
             devOnly: true,
         });
     }

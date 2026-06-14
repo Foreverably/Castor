@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { activeTicTacToeGames, generateUniqueId } from "@/utils/Games";
@@ -10,6 +14,8 @@ import { getTicTacToeButtons } from "@/utils/TicTacToeUtils";
 import { ComponentFactory } from "@/utils/ComponentFactory";
 import { MessageFlags } from "discord.js";
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class TicTacToeCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -17,13 +23,8 @@ export default class TicTacToeCommand extends BaseSlashCommand
         super(client, {
             name: "tictactoe",
             description: "Play a game of tic-tac-toe against another user!",
-            category: CommandCategory.VIP,
             cooldown: 5,
             usage: "/tictactoe [member]",
-            permissions: [],
-            constraints: {
-                vipChannel: true,
-            },
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("tictactoe")

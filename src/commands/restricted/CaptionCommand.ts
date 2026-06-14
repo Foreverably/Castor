@@ -3,11 +3,17 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    RestrictedFunCommands,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { chromium } from "playwright-core";
 import { MessageFlags } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@RestrictedFunCommands()
 export default class CaptionCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -15,13 +21,8 @@ export default class CaptionCommand extends BaseSlashCommand
         super(client, {
             name: "caption",
             description: "Add a white caption box with text to the top of an image.",
-            category: CommandCategory.FUN,
             cooldown: 5,
             usage: "/caption [image] [text] [gif]",
-            constraints: {
-                restrictedFunCommands: true,
-            },
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("caption")

@@ -2,8 +2,10 @@ import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { Message } from "discord.js";
 import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
+import { Category } from "@/structures/base/commands/CommandDecorators";
 import { chromium } from "playwright-core";
 
+@Category(CommandCategory.UTILITY)
 export default class BrowserCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -11,7 +13,6 @@ export default class BrowserCommand extends BaseMessageCommand
         super(client, {
             name: "browser",
             description: "Simple puppeteer-core/playwright-core example using BROWSER_WS_ENDPOINT",
-            category: CommandCategory.UTILITY,
             cooldown: 10,
             usage: "browser [url]",
             devOnly: true,

@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    Permissions,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { JokesDatabase } from "@/utils/JokesDatabase";
@@ -16,6 +20,8 @@ import {
     SlashCommandBuilder,
 } from "discord.js";
 
+@Category(CommandCategory.ADMIN)
+@Permissions("ManageMessages")
 export default class ManageJokesCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -23,10 +29,8 @@ export default class ManageJokesCommand extends BaseSlashCommand
         super(client, {
             name: "managejokes",
             description: "Manage the dad-joke collection",
-            category: CommandCategory.ADMIN,
             cooldown: 5,
             usage: "/managejokes [add|remove|list]",
-            permissions: ["ManageMessages"],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("managejokes")

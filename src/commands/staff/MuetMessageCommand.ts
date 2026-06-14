@@ -1,9 +1,12 @@
 import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
+import { Category, StaffOnly } from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { CustomEmoji } from "@/types/Emoji";
 import { Message, EmbedBuilder, PermissionsBitField } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@StaffOnly()
 export default class MuetMessageCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -11,11 +14,7 @@ export default class MuetMessageCommand extends BaseMessageCommand
         super(client, {
             name: "muet",
             description: "Muet someone!",
-            category: CommandCategory.FUN,
             cooldown: 10,
-            constraints: {
-                staffOnly: true,
-            },
             usage: "muet [user] [reason]",
         });
     }

@@ -3,11 +3,17 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    RestrictedFunCommands,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { chromium } from "playwright-core";
 import { MessageFlags } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@RestrictedFunCommands()
 export default class MemeCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -15,13 +21,8 @@ export default class MemeCommand extends BaseSlashCommand
         super(client, {
             name: "meme",
             description: "Overlay classic Impact meme text at the top and bottom of an image.",
-            category: CommandCategory.FUN,
             cooldown: 5,
-            constraints: {
-                restrictedFunCommands: true,
-            },
             usage: "/meme [image] [top] [bottom] [gif]",
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("meme")

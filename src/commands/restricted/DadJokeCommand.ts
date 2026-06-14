@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    RestrictedFunCommands,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { JokesDatabase } from "@/utils/JokesDatabase";
@@ -14,6 +18,8 @@ import {
     SlashCommandBuilder,
 } from "discord.js";
 
+@Category(CommandCategory.VIP)
+@RestrictedFunCommands()
 export default class DadJokeCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -21,13 +27,8 @@ export default class DadJokeCommand extends BaseSlashCommand
         super(client, {
             name: "dadjoke",
             description: "We love dad jokes!",
-            category: CommandCategory.VIP,
             cooldown: 5,
-            constraints: {
-                restrictedFunCommands: true,
-            },
             usage: "/dadjoke",
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("dadjoke")

@@ -3,11 +3,17 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    RestrictedFunCommands,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { actions, objects } from "@/types/Act";
 import { MessageFlags, ContainerBuilder } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@RestrictedFunCommands()
 export default class ActCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -15,13 +21,8 @@ export default class ActCommand extends BaseSlashCommand
         super(client, {
             name: "act",
             description: "Perform a fun action towards another user!",
-            category: CommandCategory.FUN,
             cooldown: 5,
-            constraints: {
-                restrictedFunCommands: true,
-            },
             usage: "/act <user>",
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("act")

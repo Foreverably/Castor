@@ -3,11 +3,17 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import User from "@/schemas/user";
 import { ContainerBuilder, MessageFlags } from "discord.js";
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class LeaderboardCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -15,13 +21,8 @@ export default class LeaderboardCommand extends BaseSlashCommand
         super(client, {
             name: "leaderboard",
             description: "Show the leaderboard.",
-            category: CommandCategory.VIP,
             cooldown: 5,
             usage: "/leaderboard",
-            permissions: [],
-            constraints: {
-                vipChannel: true,
-            },
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("leaderboard")

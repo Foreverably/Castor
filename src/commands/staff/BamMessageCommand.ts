@@ -1,9 +1,12 @@
 import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
+import { Category, StaffOnly } from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { CustomEmoji } from "@/types/Emoji";
 import { Message, EmbedBuilder, PermissionsBitField } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@StaffOnly()
 export default class BamMessageCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -11,11 +14,7 @@ export default class BamMessageCommand extends BaseMessageCommand
         super(client, {
             name: "bam",
             description: "Bam someone!",
-            category: CommandCategory.FUN,
             cooldown: 10,
-            constraints: {
-                staffOnly: true,
-            },
             usage: "bam [user] [reason]",
         });
     }

@@ -1,10 +1,13 @@
 import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
+import { Category, Permissions } from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { JokesDatabase } from "@/utils/JokesDatabase";
 import { Message } from "discord.js";
 import fetch from "node-fetch";
 
+@Category(CommandCategory.ADMIN)
+@Permissions("ManageMessages")
 export default class MigrateJokesCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -12,10 +15,8 @@ export default class MigrateJokesCommand extends BaseMessageCommand
         super(client, {
             name: "migratejokes",
             description: "Migrate dad jokes from an attached JSON file to the database.",
-            category: CommandCategory.ADMIN,
             cooldown: 10,
             usage: "migratejokes (with attached JSON file or replying to one)",
-            permissions: ["ManageMessages"],
             devOnly: true,
         });
     }

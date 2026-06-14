@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import User from "@/schemas/user";
@@ -26,6 +30,8 @@ const messages = [
     "🗑️ You reluctantly check the trash can... and somehow, you find **{{amount}} coins**. Gross, but worth it!",
 ];
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class SearchCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -33,13 +39,8 @@ export default class SearchCommand extends BaseSlashCommand
         super(client, {
             name: "search",
             description: "Search your surroundings for some coins!",
-            category: CommandCategory.VIP,
             cooldown: 5,
             usage: "/search",
-            permissions: [],
-            constraints: {
-                vipChannel: true,
-            },
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("search")

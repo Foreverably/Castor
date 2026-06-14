@@ -3,6 +3,10 @@ import {
     Builder,
     Interaction,
 } from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    VipChannel,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { replies } from "@/types/8BallReplies";
@@ -10,6 +14,8 @@ import { Delay } from "@/utils/Delay";
 import { ContainerBuilder, MessageFlags, SeparatorSpacingSize } from "discord.js";
 import { CustomEmoji } from "@/types/Emoji";
 
+@Category(CommandCategory.VIP)
+@VipChannel()
 export default class EightBallCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
@@ -17,13 +23,8 @@ export default class EightBallCommand extends BaseSlashCommand
         super(client, {
             name: "8ball",
             description: "Ask the lovely magic 8ball a question.",
-            category: CommandCategory.VIP,
             cooldown: 5,
-            constraints: {
-                vipChannel: true,
-            },
             usage: "/8ball <question>",
-            permissions: [],
             construct: () =>
                 new Builder<"SlashCommandBuilder">()
                     .setName("8ball")

@@ -1,8 +1,11 @@
 import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
+import { Category, StaffOnly } from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { Message, PermissionsBitField } from "discord.js";
 
+@Category(CommandCategory.FUN)
+@StaffOnly()
 export default class UwuifyMessageCommand extends BaseMessageCommand
 {
     constructor(client: ExtendedClient)
@@ -10,11 +13,7 @@ export default class UwuifyMessageCommand extends BaseMessageCommand
         super(client, {
             name: "uwu",
             description: "Turn any text into cute, uwuified text!",
-            category: CommandCategory.FUN,
             cooldown: 5,
-            constraints: {
-                staffOnly: true,
-            },
             usage: "uwu [text]",
         });
     }
