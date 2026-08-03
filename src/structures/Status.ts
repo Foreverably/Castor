@@ -25,11 +25,6 @@ export class Status
                 status: "online",
             },
             {
-                name: `people gamble their tokens`,
-                type: ActivityType.Watching,
-                status: "online",
-            },
-            {
                 name: `to commands`,
                 type: ActivityType.Listening,
                 status: "online",

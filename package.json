@@ -1,35 +1,35 @@
 {
-  "name": "castor",
-  "version": "3.0.0",
-  "description": "Discord.JS bot designed for minigames in the No Text To Speech Discord server.",
-  "main": "dist/index.js",
-  "author": "Forwynn", 
-  "scripts": {
-    "build": "tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
-    "prestart": "npm run build",
-    "start": "node dist/index.js",
-    "start:deploy": "node dist/index.js --deploy",
-    "start:dev": "ts-node -r tsconfig-paths/register index.ts",
-    "nodemon:dev": "nodemon --exec 'ts-node -r tsconfig-paths/register' index.ts",
-    "dev:deploy": "ts-node -r tsconfig-paths/register index.ts --deploy",
-    "nodemon:dev:deploy": "nodemon --exec 'ts-node -r tsconfig-paths/register' index.ts --deploy",
-    "watch": "tsc -w"
-  },
-  "dependencies": {
-    "discord.js": "^14.23.2",
-    "dotenv": "^16.4.5",
-    "mariadb": "^3.4.0",
-    "mongoose": "^9.6.2",
-    "node-fetch": "^3.3.2",
-    "playwright-core": "^1.60.0",
-    "sharp": "^0.34.5"
-  },
-  "devDependencies": {
-    "@types/node": "^20.11.24",
-    "prettier-plugin-brace-style": "^0.10.1",
-    "ts-node": "^10.9.2",
-    "tsc-alias": "^1.8.17",
-    "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.3.3"
-  }
+    "name": "castor",
+    "version": "3.0.0",
+    "description": "Discord.JS bot designed for minigames in the No Text To Speech Discord server.",
+    "main": "dist/index.js",
+    "author": "Forwynn",
+    "scripts": {
+        "clean": "rm -rf dist",
+        "build": "npm run clean && tsc --project tsconfig.json && tsc-alias -p tsconfig.json",
+        "prestart": "npm run build",
+        "start": "node dist/index.js --deploy",
+        "start:deploy": "node dist/index.js --deploy",
+        "start:dev": "ts-node -r tsconfig-paths/register index.ts",
+        "nodemon:dev": "nodemon --exec 'ts-node -r tsconfig-paths/register' index.ts",
+        "dev:deploy": "ts-node -r tsconfig-paths/register index.ts --deploy",
+        "nodemon:dev:deploy": "nodemon --exec 'ts-node -r tsconfig-paths/register' index.ts --deploy",
+        "watch": "tsc -w"
+    },
+    "dependencies": {
+        "discord.js": "^14.23.2",
+        "dotenv": "^16.4.5",
+        "mariadb": "^3.4.0",
+        "node-fetch": "^3.3.2",
+        "playwright-core": "^1.60.0",
+        "sharp": "^0.34.5"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.24",
+        "prettier-plugin-brace-style": "^0.10.1",
+        "ts-node": "^10.9.2",
+        "tsc-alias": "^1.8.17",
+        "tsconfig-paths": "^4.2.0",
+        "typescript": "^5.3.3"
+    }
 }

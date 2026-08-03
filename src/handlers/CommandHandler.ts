@@ -1,5 +1,5 @@
 import { ExtendedClient } from "@/structures/Client";
-import { BaseMessageCommand, BaseSlashCommand } from "@/structures/base";
+import { BaseSlashCommand } from "@/structures/base";
 import fs from "fs";
 import path from "path";
 
@@ -42,12 +42,6 @@ export class CommandHandler
 					const command: BaseSlashCommand = new CommandClass(this.client);
 					this.client.interactions.set(command.data.name, command);
 					this.client.logger.debug(`[CommandHandler] Loaded command: ${command.data.name} (${command.category}).`);
-				}
-				else if (CommandClass.prototype instanceof BaseMessageCommand)
-				{
-					const command: BaseMessageCommand = new CommandClass(this.client);
-					this.client.commands.set(command.name, command);
-					this.client.logger.debug(`[CommandHandler] Loaded command: ${command.name} (${command.category}).`);
 				}
 				else
 				{

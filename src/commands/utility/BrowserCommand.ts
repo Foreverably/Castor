@@ -1,55 +1,72 @@
+import {
+    BaseSlashCommand,
+    Builder,
+    Interaction,
+} from "@/structures/base/commands/BaseSlashCommand";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
-import { Message } from "discord.js";
-import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
 import { Category } from "@/structures/base/commands/CommandDecorators";
 import { chromium } from "playwright-core";
 
 @Category(CommandCategory.UTILITY)
-export default class BrowserCommand extends BaseMessageCommand
+export default class BrowserCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
     {
         super(client, {
             name: "browser",
-            description: "Simple puppeteer-core/playwright-core example using BROWSER_WS_ENDPOINT",
+            description:
+                "Simple puppeteer-core/playwright-core example using BROWSER_WS_ENDPOINT",
             cooldown: 10,
-            usage: "browser [url]",
+            usage: "/browser [url]",
             devOnly: true,
+            construct: () =>
+                new Builder<"SlashCommandBuilder">()
+                    .setName("browser")
+                    .setDescription(
+                        "Open a URL in the remote browser and screenshot it",
+                    )
+                    .addStringOption((option) =>
+                        option
+                            .setName("url")
+                            .setDescription("The URL to visit (defaults to Google)."),
+                    ),
         });
     }
 
-    async execute(message: Message, args: string[]): Promise<void>
+    async execute(interaction: Interaction<"ChatInput">): Promise<void>
     {
         const browserWSEndpoint = process.env.BROWSER_WS_ENDPOINT;
 
         if (!browserWSEndpoint)
         {
-            await message.reply("Error: BROWSER_WS_ENDPOINT environment variable is not set.");
+            await interaction.reply(
+                "Error: BROWSER_WS_ENDPOINT environment variable is not set.",
+            );
             return;
         }
 
-        const url = args[1] || "https://google.com";
+        const url = interaction.options.getString("url") || "https://google.com";
 
-        const statusMessage = await message.reply("Starting browser session");
+        await interaction.deferReply();
 
         try
         {
             this.client.logger.info(`[BrowserCommand] Connecting to: ${browserWSEndpoint}`);
-            await statusMessage.edit("Connecting to remote browser");
+            await interaction.editReply("Connecting to remote browser");
 
             const browser = await chromium.connectOverCDP(browserWSEndpoint, {
                 timeout: 15000,
             });
 
             this.client.logger.info("[BrowserCommand] Connected successfully. Creating context...");
-            await statusMessage.edit("Creating browser");
+            await interaction.editReply("Creating browser");
 
             const context = await browser.newContext();
             const page = await context.newPage();
 
             this.client.logger.info(`[BrowserCommand] Navigating to: ${url}`);
-            await statusMessage.edit(`Navigating to ${url}`);
+            await interaction.editReply(`Navigating to ${url}`);
 
             await page.goto(url, {
                 waitUntil: "domcontentloaded",
@@ -57,20 +74,20 @@ export default class BrowserCommand extends BaseMessageCommand
             });
 
             this.client.logger.info("[BrowserCommand] Page loaded. Capturing screenshot...");
-            await statusMessage.edit("Taking screenshot");
+            await interaction.editReply("Taking screenshot");
 
             const title = await page.title();
             const screenshot = await page.screenshot({ type: "png" });
 
             this.client.logger.info("[BrowserCommand] Screenshot captured. Cleaning up...");
-            await statusMessage.edit("Closing session");
+            await interaction.editReply("Closing session");
 
             await context.close();
             await browser.close();
 
             this.client.logger.info("[BrowserCommand] Successfully complete.");
 
-            await message.reply({
+            await interaction.editReply({
                 content: `Successfully loaded **${url}**\nPage title: **${title}**`,
                 files: [
                     {
@@ -79,14 +96,11 @@ export default class BrowserCommand extends BaseMessageCommand
                     },
                 ],
             });
-
-            await statusMessage.delete().catch(() =>
-            {});
         }
         catch (error)
         {
             this.client.logger.error("Browser command error:", error);
-            await statusMessage.edit(`❌ Error`).catch(() =>
+            await interaction.editReply(`❌ Error`).catch(() =>
             {});
         }
     }

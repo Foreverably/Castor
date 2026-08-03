@@ -4,7 +4,7 @@ import { Interaction } from "@/structures/base/commands/BaseSlashCommand";
 import { BaseEvent } from "@/structures/base/events/BaseEvent";
 import { config } from "@/config";
 import { Settings } from "@/utils";
-import { SettingsKeys } from "@/types/SETTINGS_KEYS";
+import { SettingKey } from "@/types/SettingKey";
 
 export default class InteractionCreateEvent extends BaseEvent<Events.InteractionCreate>
 {
@@ -20,8 +20,6 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
     public async execute(interaction: Interaction<"ChatInput" | "Autocomplete">): Promise<void>
     {
         await this.client.interactionHandler.handleInteraction(interaction);
-
-        const blacklistRole = await Settings.get<string>(SettingsKeys.commandBlacklist);
 
         if (interaction.isAutocomplete())
         {
@@ -63,17 +61,26 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
 
             try
             {
-                if (
-                    blacklistRole &&
-                    interaction.member instanceof GuildMember &&
-                    interaction.member.roles.cache.has(blacklistRole)
-                )
+                const guildId = interaction.guildId;
+                const settings = guildId ? await Settings.getAll(guildId) : {};
+
+                if (guildId)
                 {
-                    await interaction.reply({
-                        content: "You are blacklisted from using this command.",
-                        flags: MessageFlags.Ephemeral,
-                    });
-                    return;
+                    const blacklistRole = settings[SettingKey.CommandBlacklist];
+
+                    if (
+                        blacklistRole &&
+                        typeof blacklistRole === "string" &&
+                        interaction.member instanceof GuildMember &&
+                        interaction.member.roles.cache.has(blacklistRole)
+                    )
+                    {
+                        await interaction.reply({
+                            content: "You are blacklisted from using this command.",
+                            flags: MessageFlags.Ephemeral,
+                        });
+                        return;
+                    }
                 }
 
                 if (command.devOnly && !config.developers.includes(interaction.user.id))
@@ -99,11 +106,9 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
                     return;
                 }
 
-                if (command.constraints.restrictedFunCommands && interaction.inGuild())
+                if (command.constraints.restrictedFunCommands && guildId && interaction.inGuild())
                 {
-                    const allowedRoles = await Settings.get<string | string[]>(
-                        SettingsKeys.allowedRestrictedFunCommandRoles,
-                    );
+                    const allowedRoles = settings[SettingKey.RestrictedFunCommandRoles];
                     if (Array.isArray(allowedRoles))
                     {
                         const hasRole = allowedRoles.some((role) =>
@@ -120,10 +125,10 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
                     }
                 }
 
-                if (command.constraints.staffOnly && interaction.inGuild())
+                if (command.constraints.staffOnly && guildId && interaction.inGuild())
                 {
-                    const staffRole = await Settings.get<string | string[]>(SettingsKeys.staffRole);
-                    const staffRoles = Array.isArray(staffRole) ? staffRole : staffRole ? [staffRole] : [];
+                    const staffRole = settings[SettingKey.StaffRoles];
+                    const staffRoles = Array.isArray(staffRole) ? staffRole : staffRole && typeof staffRole === "string" ? [staffRole] : [];
                     const hasStaffRole = staffRoles.some((role) =>
                         (interaction.member as GuildMember).roles.cache.has(role),
                     );
@@ -137,14 +142,12 @@ export default class InteractionCreateEvent extends BaseEvent<Events.Interaction
                     }
                 }
 
-                if (command.constraints.vipChannel && interaction.inGuild())
+                if (command.constraints.vipChannel && guildId && interaction.inGuild())
                 {
-                    let vipChannelId = await Settings.get<string | string[]>(
-                        SettingsKeys.vipChannel,
-                    );
+                    let vipChannelId = settings[SettingKey.VipChannel];
                     if (Array.isArray(vipChannelId)) vipChannelId = vipChannelId[0];
 
-                    if (vipChannelId && interaction.channelId !== vipChannelId)
+                    if (vipChannelId && typeof vipChannelId === "string" && interaction.channelId !== vipChannelId)
                     {
                         await interaction.reply({
                             content: `This command can only be used in the VIP channel (<#${vipChannelId}>)!`,

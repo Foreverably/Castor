@@ -1,14 +1,21 @@
-import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
-import { Category, Permissions } from "@/structures/base/commands/CommandDecorators";
+import {
+    BaseSlashCommand,
+    Builder,
+    Interaction,
+} from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    Permissions,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { JokesDatabase } from "@/utils/JokesDatabase";
-import { Message } from "discord.js";
+import { MessageFlags } from "discord.js";
 import fetch from "node-fetch";
 
 @Category(CommandCategory.ADMIN)
 @Permissions("ManageMessages")
-export default class MigrateJokesCommand extends BaseMessageCommand
+export default class MigrateJokesCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
     {
@@ -16,39 +23,38 @@ export default class MigrateJokesCommand extends BaseMessageCommand
             name: "migratejokes",
             description: "Migrate dad jokes from an attached JSON file to the database.",
             cooldown: 10,
-            usage: "migratejokes (with attached JSON file or replying to one)",
+            usage: "/migratejokes <file>",
             devOnly: true,
+            construct: () =>
+                new Builder<"SlashCommandBuilder">()
+                    .setName("migratejokes")
+                    .setDescription(
+                        "Migrate dad jokes from an attached JSON file to the database.",
+                    )
+                    .addAttachmentOption((option) =>
+                        option
+                            .setName("file")
+                            .setDescription("The JSON file containing the jokes.")
+                            .setRequired(true),
+                    ),
         });
     }
 
-    async execute(message: Message, args: string[]): Promise<void>
+    async execute(interaction: Interaction<"ChatInput">): Promise<void>
     {
-        let attachment = message.attachments.first();
-
-        if (!attachment && message.reference?.messageId)
-        {
-            try
-            {
-                const repliedMessage = await message.channel.messages.fetch(
-                    message.reference.messageId,
-                );
-                attachment = repliedMessage.attachments.first();
-            }
-            catch (error)
-            {
-                this.client.logger.error("Failed to fetch replied message:", error);
-            }
-        }
+        const attachment = interaction.options.getAttachment("file");
 
         if (!attachment || !attachment.name?.toLowerCase().endsWith(".json"))
         {
-            await message.reply(
-                "Please attach a valid `.json` file containing the jokes, or reply to a message that has one attached.",
-            );
+            await interaction.reply({
+                content:
+                    "Please attach a valid `.json` file containing the jokes.",
+                flags: MessageFlags.Ephemeral,
+            });
             return;
         }
 
-        const statusMessage = await message.reply("Downloading attached jokes file...");
+        await interaction.deferReply();
 
         try
         {
@@ -61,7 +67,7 @@ export default class MigrateJokesCommand extends BaseMessageCommand
             const data = await response.json();
             if (!Array.isArray(data))
             {
-                await statusMessage.edit(
+                await interaction.editReply(
                     "❌ Error: The JSON root must be an array of joke objects.",
                 );
                 return;
@@ -81,26 +87,26 @@ export default class MigrateJokesCommand extends BaseMessageCommand
 
             if (jokesToMigrate.length === 0)
             {
-                await statusMessage.edit(
+                await interaction.editReply(
                     "❌ Error: No valid jokes found in the file. Each joke must have a setup and a punchline.",
                 );
                 return;
             }
 
-            await statusMessage.edit(
+            await interaction.editReply(
                 `Found ${jokesToMigrate.length} jokes. Inserting into database...`,
             );
 
             const inserted = await JokesDatabase.addJokesBatch(jokesToMigrate);
 
-            await statusMessage.edit(
+            await interaction.editReply(
                 `✅ Successfully migrated **${inserted}** jokes to the MariaDB database!`,
             );
         }
         catch (error: any)
         {
             this.client.logger.error("Error migrating jokes:", error);
-            await statusMessage.edit(`❌ Error during migration: ${error.message || error}`);
+            await interaction.editReply(`❌ Error during migration: ${error.message || error}`);
         }
     }
 }

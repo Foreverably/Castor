@@ -12,7 +12,7 @@ import { CommandCategory } from "@/types/CommandCategories";
 import { replies } from "@/types/8BallReplies";
 import { Delay } from "@/utils/Delay";
 import { ContainerBuilder, MessageFlags, SeparatorSpacingSize } from "discord.js";
-import { CustomEmoji } from "@/types/Emoji";
+import { Emoji } from "@/types/Emojis";
 
 @Category(CommandCategory.VIP)
 @VipChannel()
@@ -57,7 +57,7 @@ export default class EightBallCommand extends BaseSlashCommand
             );
 
         await interaction.reply({
-            content: `-# ${CustomEmoji.loading} Castor is thinking...`,
+            content: `-# ${Emoji.Loading} Castor is thinking...`,
         });
 
         Delay(Math.random() * 3000 + 1000).then(() =>

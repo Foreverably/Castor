@@ -1,13 +1,20 @@
-import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
-import { Category, StaffOnly } from "@/structures/base/commands/CommandDecorators";
+import {
+    BaseSlashCommand,
+    Builder,
+    Interaction,
+} from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    StaffOnly,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
-import { CustomEmoji } from "@/types/Emoji";
-import { Message, EmbedBuilder, PermissionsBitField } from "discord.js";
+import { Emoji } from "@/types/Emojis";
+import { EmbedBuilder, MessageFlags } from "discord.js";
 
 @Category(CommandCategory.FUN)
 @StaffOnly()
-export default class WarmMessageCommand extends BaseMessageCommand
+export default class WarmCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
     {
@@ -15,79 +22,66 @@ export default class WarmMessageCommand extends BaseMessageCommand
             name: "warm",
             description: "Warm someone!",
             cooldown: 10,
-            usage: "warm [user] [reason]",
+            usage: "/warm <user> [reason]",
+            construct: () =>
+                new Builder<"SlashCommandBuilder">()
+                    .setName("warm")
+                    .setDescription("Warm someone!")
+                    .addUserOption((option) =>
+                        option
+                            .setName("user")
+                            .setDescription("The user to warm.")
+                            .setRequired(true),
+                    )
+                    .addStringOption((option) =>
+                        option
+                            .setName("reason")
+                            .setDescription("The reason for the warm."),
+                    ),
         });
     }
 
-    async execute(message: Message, args: string[]): Promise<void>
+    async execute(interaction: Interaction<"ChatInput">): Promise<void>
     {
-        if (!message.inGuild())
+        if (!interaction.inGuild())
         {
-            await message.reply("This command can only be used in a server.");
+            await interaction.reply({
+                content: "This command can only be used in a server.",
+                flags: MessageFlags.Ephemeral,
+            });
             return;
         }
 
-        let targetMember = null;
-        let reason = "No reason provided.";
+        const targetUser = interaction.options.getUser("user");
+        const reason = interaction.options.getString("reason") || "No reason provided.";
 
-        const reference = message.reference;
-        if (reference && reference.messageId)
+        if (!targetUser)
         {
-            const repliedMessage =
-                message.channel.messages.cache.get(reference.messageId) ||
-                (await message.channel.messages.fetch(reference.messageId).catch(() => null));
-
-            if (repliedMessage)
-            {
-                targetMember =
-                    repliedMessage.member ||
-                    (await message.guild?.members
-                        .fetch(repliedMessage.author.id)
-                        .catch(() => null));
-
-                if (targetMember)
-                {
-                    reason = args.slice(1).join(" ") || "No reason provided.";
-                }
-            }
+            await interaction.reply({
+                content: "Please specify a user to warm!",
+                flags: MessageFlags.Ephemeral,
+            });
+            return;
         }
+
+        await interaction.deferReply();
+
+        const targetMember = await interaction.guild!.members
+            .fetch(targetUser.id)
+            .catch(() => null);
 
         if (!targetMember)
         {
-            const targetArg = args[1];
-            if (!targetArg)
-            {
-                await message.reply("Please specify a user to warm!");
-                return;
-            }
-
-            const targetId = targetArg.replace(/[<@!>]/g, "");
-            targetMember =
-                message.mentions.members?.first() ||
-                message.guild?.members.cache.get(targetId) ||
-                (await message.guild?.members.fetch(targetId).catch(() => null));
-
-            if (!targetMember)
-            {
-                await message.reply("Could not find that member.");
-                return;
-            }
-
-            reason = args.slice(2).join(" ") || "No reason provided.";
+            await interaction.editReply("Could not find that member.");
+            return;
         }
-
-        const botMember = message.guild?.members.me;
-        const canDelete = botMember
-            ?.permissionsIn(message.channel)
-            .has(PermissionsBitField.Flags.ManageMessages);
-        if (canDelete) await message.delete().catch(() => null);
 
         const embed = new EmbedBuilder()
             .setColor(0x38f075)
             .setDescription(
-                `${CustomEmoji.check} <@${targetMember.id}> **has been warmed** || ${reason}`,
+                `${Emoji.Check} <@${targetMember.id}> **has been warmed** || ${reason}`,
             );
 
-        await message.channel.send({ embeds: [embed] });
+        await interaction.editReply({ embeds: [embed] });
     }
 }

@@ -1,15 +1,47 @@
 import { Client, Collection, GatewayIntentBits, Partials } from "discord.js";
-import { BaseInteractionListener, BaseMessageCommand, BaseSlashCommand } from "@/structures/base";
+import { BaseInteractionListener, BaseSlashCommand } from "@/structures/base";
 import { CommandHandler, ErrorHandler, EventHandler, InteractionHandler } from "@/handlers";
 
 import { Logger, MiscUtils } from "@/utils";
+import { Settings } from "@/utils/Settings";
 import { Status } from "./Status";
 import { config } from "@/config";
-import * as mongoose from "mongoose";
+
+interface IntentOption
+{
+    bit: GatewayIntentBits;
+    env: string;
+    defaultEnabled: boolean;
+}
+
+const INTENT_OPTIONS: IntentOption[] = [
+    { bit: GatewayIntentBits.Guilds, env: "INTENT_GUILDS", defaultEnabled: true },
+    { bit: GatewayIntentBits.GuildMessages, env: "INTENT_GUILD_MESSAGES", defaultEnabled: true },
+    // Message Content is a privileged intent; it must be explicitly enabled in the
+    // Discord Developer Portal AND via this env flag, otherwise login fails with
+    // "Used disallowed intents". It defaults to OFF.
+    { bit: GatewayIntentBits.MessageContent, env: "INTENT_MESSAGE_CONTENT", defaultEnabled: false },
+    {
+        bit: GatewayIntentBits.GuildMessageReactions,
+        env: "INTENT_GUILD_MESSAGE_REACTIONS",
+        defaultEnabled: true,
+    },
+];
+
+function isIntentEnabled(option: IntentOption): boolean
+{
+    const raw = process.env[option.env];
+    if (raw === undefined) return option.defaultEnabled;
+    return !["0", "false", "off", "no", "disabled"].includes(raw.trim().toLowerCase());
+}
+
+function resolveIntents(): GatewayIntentBits[]
+{
+    return INTENT_OPTIONS.filter(isIntentEnabled).map((option) => option.bit);
+}
 
 export class ExtendedClient extends Client
 {
-    public commands: Collection<string, BaseMessageCommand>;
     public interactionsListeners: Collection<string, BaseInteractionListener>;
     public interactions: Collection<string, BaseSlashCommand>;
 
@@ -20,22 +52,22 @@ export class ExtendedClient extends Client
     private readonly commandHandler: CommandHandler;
     private readonly eventHandler: EventHandler;
     private readonly statusManager: Status;
-    private databaseConnected: boolean = false;
 
     constructor()
     {
         super({
-            intents: [
-                GatewayIntentBits.Guilds,
-                GatewayIntentBits.GuildMessages,
-                GatewayIntentBits.MessageContent,
-                GatewayIntentBits.GuildMessageReactions,
-            ],
+            intents: resolveIntents(),
             partials: [Partials.Message, Partials.Channel, Partials.User, Partials.Reaction],
         });
 
         this.logger = Logger.getInstance();
-        this.commands = new Collection();
+
+        if (!process.env.INTENT_MESSAGE_CONTENT)
+        {
+            this.logger.warn(
+                "[Client] Message Content intent is disabled; prefix commands ('?', '+') will not receive message content.",
+            );
+        }
         this.interactionsListeners = new Collection();
         this.interactions = new Collection();
         this.interactionHandler = new InteractionHandler(this);
@@ -50,8 +82,8 @@ export class ExtendedClient extends Client
     {
         this.logger.debug("[Client] Initializing client.");
 
-        this.logger.debug("[Client] Connecting to MongoDB.");
-        await this.connectToDatabase();
+        this.logger.debug("[Client] Initializing per-guild settings.");
+        await Settings.initialize();
 
         this.logger.debug("[Client] Loading commands.");
         await this.commandHandler.loadCommands();
@@ -72,53 +104,5 @@ export class ExtendedClient extends Client
     public getStatusManager(): Status
     {
         return this.statusManager;
-    }
-
-    public getDatabaseHealthCheck(): boolean
-    {
-        return this.databaseConnected;
-    }
-
-    private async connectToDatabase(retries: number = 3): Promise<void>
-    {
-        for (let attempt = 1; attempt <= retries; attempt++)
-        {
-            try
-            {
-                const mongoUri = process.env.MONGODB_URI;
-                if (!mongoUri)
-                {
-                    throw new Error("MONGODB_URI is not defined in environment variables");
-                }
-
-                const startedAt = Date.now();
-
-                const connection = await mongoose.connect(mongoUri);
-
-                await connection.connection.db?.admin().ping();
-
-                const duration = Date.now() - startedAt;
-                this.logger.info(`[Client] Connected to MongoDB in ${duration}ms.`);
-                this.databaseConnected = true;
-                return;
-            }
-            catch (error: any)
-            {
-                this.logger.error(
-                    `[Client] Failed to connect to MongoDB: ${error.message || error}.`,
-                );
-
-                if (attempt === retries)
-                {
-                    this.logger.error("[Client] Failed to connect to MongoDB after all retries.");
-                    this.databaseConnected = false;
-                    throw error;
-                }
-
-                this.logger.warn(`[Client] Retrying connection (${attempt}/${retries}).`);
-
-                await MiscUtils.delay(1000 * attempt);
-            }
-        }
     }
 }

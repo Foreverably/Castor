@@ -1,3 +1,8 @@
+import {
+    BaseSlashCommand,
+    Builder,
+    Interaction,
+} from "@/structures/base/commands/BaseSlashCommand";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { Category, Permissions } from "@/structures/base/commands/CommandDecorators";
@@ -6,17 +11,14 @@ import {
     ButtonBuilder,
     ButtonStyle,
     ContainerBuilder,
-    Message,
     MessageFlags,
     SeparatorSpacingSize,
 } from "discord.js";
-import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
 import { AnsiBrightFg, AnsiFg, AnsiStyle, Language, Markdown } from "@/utils/discord/Markdown";
 import os from "os";
 import fetch from "node-fetch";
 import { DiscordStatusResponse } from "@/types/DiscordStatusResponse";
 import * as mariadb from "mariadb";
-import mongoose from "mongoose";
 import { chromium } from "playwright-core";
 
 interface ServiceHealth
@@ -87,61 +89,34 @@ async function checkMariaDB(): Promise<ServiceHealth>
     }
 }
 
-async function checkMongoDB(): Promise<ServiceHealth>
-{
-    const uri = process.env.MONGODB_URI;
-    if (!uri)
-    {
-        return { name: "MongoDB", healthy: false, detail: "MONGODB_URI not set" };
-    }
-
-    const start = Date.now();
-    try
-    {
-        if (mongoose.connection.readyState === 1)
-        {
-            await mongoose.connection.db?.admin().ping();
-            const latencyMs = Date.now() - start;
-            return { name: "MongoDB", healthy: true, latencyMs };
-        }
-
-        const tempConn = await mongoose.createConnection(uri).asPromise();
-        await tempConn.db?.admin().ping();
-        const latencyMs = Date.now() - start;
-        await tempConn.close();
-        return { name: "MongoDB", healthy: true, latencyMs };
-    }
-    catch (e: any)
-    {
-        return {
-            name: "MongoDB",
-            healthy: false,
-            latencyMs: Date.now() - start,
-            detail: e?.message?.split("\n")[0] ?? "Connection failed",
-        };
-    }
-}
-
 @Category(CommandCategory.DEVELOPER)
 @Permissions("Administrator")
-export default class PingCommand extends BaseMessageCommand
+export default class PingCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
     {
         super(client, {
             name: "ping",
             description: "Replies with Pong!",
-            aliases: ["pong"],
             cooldown: 5,
-            usage: "ping [--detailed | -d]",
+            usage: "/ping [detailed]",
             devOnly: true,
+            construct: () =>
+                new Builder<"SlashCommandBuilder">()
+                    .setName("ping")
+                    .setDescription("Replies with Pong!")
+                    .addBooleanOption((option) =>
+                        option
+                            .setName("detailed")
+                            .setDescription("Show detailed system information."),
+                    ),
         });
     }
 
-    async execute(message: Message, args: string[]): Promise<void>
+    async execute(interaction: Interaction<"ChatInput">): Promise<void>
     {
-        const clientPing = Date.now() - message.createdTimestamp;
-        const isDetailed = args[1] === "--detailed" || args[1] === "-d";
+        const clientPing = Date.now() - interaction.createdTimestamp;
+        const isDetailed = interaction.options.getBoolean("detailed") ?? false;
 
         let systemStatus = "Unknown";
         let statusColor = AnsiFg.White;
@@ -175,13 +150,12 @@ export default class PingCommand extends BaseMessageCommand
             this.client.logger.error("Failed to fetch Discord status:", e);
         }
 
-        const [browserless, mariadb, mongodb] = await Promise.all([
+        const [browserless, mariadb] = await Promise.all([
             checkBrowserless(),
             checkMariaDB(),
-            checkMongoDB(),
         ]);
 
-        const services: ServiceHealth[] = [browserless, mariadb, mongodb];
+        const services: ServiceHealth[] = [browserless, mariadb];
         const healthyCount = services.filter((s) => s.healthy).length;
         const allHealthy = healthyCount === services.length;
         const noneHealthy = healthyCount === 0;
@@ -228,7 +202,7 @@ export default class PingCommand extends BaseMessageCommand
                     new ActionRowBuilder<ButtonBuilder>().addComponents(linkButton),
                 );
 
-            await message.reply({
+            await interaction.reply({
                 components: [component],
                 flags: MessageFlags.IsComponentsV2,
             });
@@ -298,7 +272,7 @@ export default class PingCommand extends BaseMessageCommand
                     new ActionRowBuilder<ButtonBuilder>().addComponents(linkButton),
                 );
 
-            await message.reply({
+            await interaction.reply({
                 components: [component],
                 flags: MessageFlags.IsComponentsV2,
             });

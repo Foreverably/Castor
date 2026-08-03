@@ -1,12 +1,19 @@
-import { BaseMessageCommand } from "@/structures/base/commands/BaseMessageCommand";
-import { Category, StaffOnly } from "@/structures/base/commands/CommandDecorators";
+import {
+    BaseSlashCommand,
+    Builder,
+    Interaction,
+} from "@/structures/base/commands/BaseSlashCommand";
+import {
+    Category,
+    StaffOnly,
+} from "@/structures/base/commands/CommandDecorators";
 import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
-import { Message, PermissionsBitField } from "discord.js";
+import { MessageFlags } from "discord.js";
 
 @Category(CommandCategory.FUN)
 @StaffOnly()
-export default class UwuifyMessageCommand extends BaseMessageCommand
+export default class UwuifyCommand extends BaseSlashCommand
 {
     constructor(client: ExtendedClient)
     {
@@ -14,7 +21,17 @@ export default class UwuifyMessageCommand extends BaseMessageCommand
             name: "uwu",
             description: "Turn any text into cute, uwuified text!",
             cooldown: 5,
-            usage: "uwu [text]",
+            usage: "/uwu <text>",
+            construct: () =>
+                new Builder<"SlashCommandBuilder">()
+                    .setName("uwu")
+                    .setDescription("Turn any text into cute, uwuified text!")
+                    .addStringOption((option) =>
+                        option
+                            .setName("text")
+                            .setDescription("The text to uwuify.")
+                            .setRequired(true),
+                    ),
         });
     }
 
@@ -76,31 +93,22 @@ export default class UwuifyMessageCommand extends BaseMessageCommand
         return uwuified;
     }
 
-    async execute(message: Message, args: string[]): Promise<void>
+    async execute(interaction: Interaction<"ChatInput">): Promise<void>
     {
-        const textToUwuify = args.slice(1).join(" ");
+        const text = interaction.options.getString("text");
 
-        if (!textToUwuify)
+        if (!text)
         {
-            await message.reply("Please provide some text to uwuify!");
+            await interaction.reply({
+                content: "Please provide some text to uwuify!",
+                flags: MessageFlags.Ephemeral,
+            });
             return;
         }
 
-        const uwuifiedText = this.uwuify(textToUwuify);
+        const uwuifiedText = this.uwuify(text);
 
-        const botMember = message.guild?.members.me;
-        const canDelete = botMember
-            ?.permissionsIn(message.channel as any)
-            .has(PermissionsBitField.Flags.ManageMessages);
-        if (canDelete) await message.delete().catch(() => null);
-
-        if (!message.inGuild())
-        {
-            await message.reply("This command can only be used in a server.");
-            return;
-        }
-
-        await message.channel.send({
+        await interaction.reply({
             content: uwuifiedText,
             allowedMentions: { parse: [] },
         });

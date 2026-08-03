@@ -1,58 +1,34 @@
-import { createPool, Pool, PoolConnection } from "mariadb";
+import mariadb from "mariadb";
 import { Logger } from "./Logger";
-import { SettingsKeys } from "@/types/SETTINGS_KEYS";
+import { SettingKey } from "@/types/SettingKey";
 
-export type SettingType =
-    | "string"
-    | "int"
-    | "bigint"
-    | "double"
-    | "boolean"
-    | "date"
-    | "json"
-    | "raw"
-    | "channel"
-    | "channels"
-    | "role"
-    | "roles";
+export type SettingValue = string | string[] | boolean | null;
 
-export type SettingPrimitive = string | number | boolean | Date | bigint;
-export type SettingValue = SettingPrimitive | Record<string, any> | Array<any> | null;
-
-export interface SettingRecord
-{
-    key: string;
-    type: SettingType;
-    value: SettingValue;
-}
-
-export type SettingKey = (typeof SettingsKeys)[keyof typeof SettingsKeys];
-
-export function isKnownSettingKey(key: string): key is SettingKey
-{
-    return (Object.values(SettingsKeys) as readonly string[]).includes(key);
-}
+const TABLE_NAME = "guild_settings";
+const logger = Logger.getInstance();
 
 class SettingsManager
 {
     private static instance: SettingsManager;
 
-    private readonly logger: Logger;
-    private readonly pool: Pool;
+    private pool: mariadb.Pool | null = null;
     private initialized = false;
+    private guildQueues = new Map<string, Promise<unknown>>();
 
-    private constructor()
+    private constructor() {}
+
+    private enqueue<T>(guildId: string, task: () => Promise<T>): Promise<T>
     {
-        this.logger = Logger.getInstance();
-
-        const uri = process.env.MARIADB_URI || process.env.MARIADB_URL;
-
-        if (!uri)
-        {
-            throw new Error("MARIADB_URI (or MARIADB_URL) is not defined in environment variables");
-        }
-
-        this.pool = createPool(uri);
+        const previous = this.guildQueues.get(guildId) ?? Promise.resolve();
+        const result = previous.then(task, task);
+        this.guildQueues.set(
+            guildId,
+            result.then(
+                () => undefined,
+                () => undefined,
+            ),
+        );
+        return result;
     }
 
     public static getInstance(): SettingsManager
@@ -61,552 +37,280 @@ class SettingsManager
         {
             SettingsManager.instance = new SettingsManager();
         }
-
         return SettingsManager.instance;
     }
 
-    public async get<T = SettingValue>(
-        key: string,
-        defaultValue: T | null = null,
-    ): Promise<T | null>
+    public async initialize(): Promise<void>
     {
-        await this.ensureInitialized();
+        if (this.initialized) return;
 
-        let conn: PoolConnection | null = null;
+        const uri = process.env.MARIADB_URI || process.env.MARIADB_URL;
+        if (!uri)
+        {
+            throw new Error("MARIADB_URI (or MARIADB_URL) is not defined in environment variables");
+        }
 
+        this.pool = mariadb.createPool(uri);
+
+        let conn: mariadb.PoolConnection | null = null;
         try
         {
-            conn = await this.getConnection();
-            const rows = await conn.query<
-                {
-                    key: string;
-                    type: SettingType;
-                    value_text: string | null;
-                }[]
-            >("SELECT `key`, `type`, value_text FROM settings WHERE `key` = ? LIMIT 1", [key]);
-
-            if (!rows || rows.length === 0)
-            {
-                return defaultValue;
-            }
-
-            const row = rows[0];
-            const value = this.deserialize(row.type, row.value_text);
-            return value as T;
+            conn = await this.pool.getConnection();
+            await conn.query(`SELECT 1`);
+            await conn.query(`
+                CREATE TABLE IF NOT EXISTS \`${TABLE_NAME}\`
+                (
+                    guild_id VARCHAR(20) PRIMARY KEY,
+                    settings JSON NOT NULL DEFAULT ('{}')
+                )
+            `);
+            this.initialized = true;
+            logger.info("[Settings] Initialized per-guild settings table.");
         }
         catch (error)
         {
-            this.logger.error(`[Settings] Failed to get setting "${key}".`, error as Error);
+            logger.error("[Settings] Failed to initialize.", error as Error);
             throw error;
         }
         finally
         {
-            if (conn)
-            {
-                conn.release();
-            }
+            if (conn) conn.release();
         }
     }
 
-    public async getRecord(key: string): Promise<SettingRecord | null>
+    private ensureReady(): void
     {
-        await this.ensureInitialized();
-
-        let conn: PoolConnection | null = null;
-
-        try
+        if (!this.initialized || !this.pool)
         {
-            conn = await this.getConnection();
-            const rows = await conn.query<
-                {
-                    key: string;
-                    type: SettingType;
-                    value_text: string | null;
-                }[]
-            >("SELECT `key`, `type`, value_text FROM settings WHERE `key` = ? LIMIT 1", [key]);
-
-            if (!rows || rows.length === 0)
-            {
-                return null;
-            }
-
-            const row = rows[0];
-            return {
-                key: row.key,
-                type: row.type,
-                value: this.deserialize(row.type, row.value_text),
-            };
-        }
-        catch (error)
-        {
-            this.logger.error(`[Settings] Failed to get setting record "${key}".`, error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
-            {
-                conn.release();
-            }
+            throw new Error("[Settings] Not initialized. Call initialize() first.");
         }
     }
 
-    public async set<T extends SettingValue>(
-        key: string,
-        value: T,
-        explicitType?: SettingType,
+    private parseSettings(raw: unknown): Record<string, SettingValue>
+    {
+        if (!raw) return {};
+        if (typeof raw === "object") return raw as Record<string, SettingValue>;
+        if (typeof raw === "string") return JSON.parse(raw);
+        return {};
+    }
+
+    public async get(
+        guildId: string,
+        key: SettingKey,
+    ): Promise<SettingValue | undefined>
+    {
+        this.ensureReady();
+        const rows = await this.pool!.query(
+            `SELECT settings FROM \`${TABLE_NAME}\` WHERE guild_id = ?`,
+            [guildId],
+        );
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (!row || !row.settings) return undefined;
+        const settings = this.parseSettings(row.settings);
+        return settings[key];
+    }
+
+    public async getMany(
+        guildId: string,
+        keys: SettingKey[],
+    ): Promise<Partial<Record<SettingKey, SettingValue>>>
+    {
+        this.ensureReady();
+        if (keys.length === 0) return {};
+
+        const rows = await this.pool!.query(
+            `SELECT settings FROM \`${TABLE_NAME}\` WHERE guild_id = ?`,
+            [guildId],
+        );
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (!row || !row.settings)
+        {
+            return Object.fromEntries(keys.map(k => [k, undefined])) as Partial<Record<SettingKey, SettingValue>>;
+        }
+
+        const settings = this.parseSettings(row.settings);
+        const result: Partial<Record<SettingKey, SettingValue>> = {};
+        for (const key of keys)
+        {
+            result[key] = settings[key];
+        }
+        return result;
+    }
+
+    public async set(
+        guildId: string,
+        key: SettingKey,
+        value: SettingValue | null,
     ): Promise<void>
     {
-        await this.ensureInitialized();
+        this.ensureReady();
 
-        const type = explicitType || this.inferType(value);
-        const serialized = this.serialize(type, value);
-
-        let conn: PoolConnection | null = null;
-
-        try
+        return this.enqueue(guildId, async () =>
         {
-            conn = await this.getConnection();
-            await conn.query(
-                `
-                    INSERT INTO settings (\`key\`, \`type\`, value_text)
-                    VALUES (?, ?, ?) ON DUPLICATE KEY
-                    UPDATE
-                        \`type\` =
-                    VALUES (\`type\`), value_text =
-                    VALUES (value_text)
-				`,
-                [key, type, serialized],
+            const rows = await this.pool!.query(
+                `SELECT settings FROM \`${TABLE_NAME}\` WHERE guild_id = ?`,
+                [guildId],
             );
-
-            this.logger.debug(`[Settings] Set setting "${key}" with type "${type}".`);
-        }
-        catch (error)
-        {
-            this.logger.error(`[Settings] Failed to set setting "${key}".`, error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
+            const row = Array.isArray(rows) ? rows[0] : rows;
+            let settings: Record<string, SettingValue> = {};
+            if (row && row.settings)
             {
-                conn.release();
+                settings = this.parseSettings(row.settings);
             }
-        }
-    }
 
-    public async delete(key: string): Promise<void>
-    {
-        await this.ensureInitialized();
-
-        let conn: PoolConnection | null = null;
-
-        try
-        {
-            conn = await this.getConnection();
-            await conn.query("DELETE FROM settings WHERE `key` = ?", [key]);
-            this.logger.debug(`[Settings] Deleted setting "${key}".`);
-        }
-        catch (error)
-        {
-            this.logger.error(`[Settings] Failed to delete setting "${key}".`, error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
+            if (value === null)
             {
-                conn.release();
+                delete settings[key];
             }
-        }
-    }
+            else
+            {
+                settings[key] = value;
+            }
 
-    public async list(type?: SettingType): Promise<SettingRecord[]>
-    {
-        await this.ensureInitialized();
-
-        let conn: PoolConnection | null = null;
-
-        try
-        {
-            conn = await this.getConnection();
-
-            const rows = await conn.query<
-                {
-                    key: string;
-                    type: SettingType;
-                    value_text: string | null;
-                }[]
-            >(
-                type
-                    ? "SELECT `key`, `type`, value_text FROM settings WHERE `type` = ? ORDER BY `key` ASC"
-                    : "SELECT `key`, `type`, value_text FROM settings ORDER BY `type` ASC, `key` ASC",
-                type ? [type] : [],
+            await this.pool!.query(
+                `INSERT INTO \`${TABLE_NAME}\` (guild_id, settings) VALUES (?, ?) ON DUPLICATE KEY UPDATE settings = VALUES(settings)`,
+                [guildId, JSON.stringify(settings)],
             );
-
-            return rows.map((row) => ({
-                key: row.key,
-                type: row.type,
-                value: this.deserialize(row.type, row.value_text),
-            }));
-        }
-        catch (error)
-        {
-            this.logger.error("[Settings] Failed to list settings.", error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
-            {
-                conn.release();
-            }
-        }
+        });
     }
 
-    public async listTypes(): Promise<{ type: SettingType; count: number }[]>
+    public async getAll(
+        guildId: string,
+    ): Promise<Partial<Record<SettingKey, SettingValue>>>
     {
-        await this.ensureInitialized();
+        this.ensureReady();
+        const rows = await this.pool!.query(
+            `SELECT settings FROM \`${TABLE_NAME}\` WHERE guild_id = ?`,
+            [guildId],
+        );
+        const row = Array.isArray(rows) ? rows[0] : rows;
+        if (!row || !row.settings) return {};
+        return this.parseSettings(row.settings) as Partial<Record<SettingKey, SettingValue>>;
+    }
 
-        let conn: PoolConnection | null = null;
-
-        try
+    public async memberHasAnyRoleFromKeys(
+        guildId: string,
+        memberRoleIds: Iterable<string> | string[] | Set<string>,
+        keys: SettingKey[],
+    ): Promise<boolean>
+    {
+        const memberSet = new Set<string>();
+        if (Array.isArray(memberRoleIds))
         {
-            conn = await this.getConnection();
-            const rows = await conn.query<
+            for (const id of memberRoleIds) if (id) memberSet.add(String(id));
+        }
+        else if (memberRoleIds instanceof Set)
+        {
+            for (const id of memberRoleIds) if (id) memberSet.add(String(id));
+        }
+        else
+        {
+            for (const id of memberRoleIds as Iterable<string>) if (id) memberSet.add(String(id));
+        }
+
+        if (memberSet.size === 0 || keys.length === 0) return false;
+
+        const settings = await this.getMany(guildId, keys);
+
+        for (const k of keys)
+        {
+            const v = settings[k];
+            if (v == null) continue;
+
+            if (Array.isArray(v))
+            {
+                for (const id of v)
                 {
-                    type: SettingType;
-                    count: number;
-                }[]
-            >("SELECT `type`, COUNT(*) AS count FROM settings GROUP BY `type` ORDER BY `type` ASC");
-
-            return rows;
-        }
-        catch (error)
-        {
-            this.logger.error("[Settings] Failed to list setting types.", error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
-            {
-                conn.release();
-            }
-        }
-    }
-
-    /**
-     * Returns the stored array for `key`, or an empty array if the key doesn't exist.
-     */
-    public async getArray<T = any>(key: string): Promise<T[]>
-    {
-        const value = await this.get<T[]>(key, []);
-        if (!Array.isArray(value))
-        {
-            this.logger.warn(
-                `[Settings] getArray: "${key}" exists but is not an array — returning [].`,
-            );
-            return [];
-        }
-        return value;
-    }
-
-    /**
-     * Replaces the entire array stored under `key`.
-     */
-    public async setArray<T = any>(key: string, items: T[]): Promise<void>
-    {
-        await this.set(key, items, "json");
-    }
-
-    /**
-     * Appends `item` to the array stored under `key`.
-     * Skips the write if `item` is already present (strict equality / JSON comparison).
-     * @returns `true` if the item was added, `false` if it was already present.
-     */
-    public async addToArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        const arr = await this.getArray<T>(key);
-        const itemStr = JSON.stringify(item);
-        if (arr.some((el) => JSON.stringify(el) === itemStr))
-        {
-            return false;
-        }
-        arr.push(item);
-        await this.set(key, arr, "json");
-        return true;
-    }
-
-    /**
-     * Removes all occurrences of `item` from the array stored under `key`.
-     * @returns `true` if at least one item was removed, `false` if nothing changed.
-     */
-    public async removeFromArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        const arr = await this.getArray<T>(key);
-        const itemStr = JSON.stringify(item);
-        const filtered = arr.filter((el) => JSON.stringify(el) !== itemStr);
-        if (filtered.length === arr.length)
-        {
-            return false;
-        }
-        await this.set(key, filtered, "json");
-        return true;
-    }
-
-    /**
-     * Returns `true` if `item` is present in the array stored under `key`.
-     */
-    public async hasInArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        const arr = await this.getArray<T>(key);
-        const itemStr = JSON.stringify(item);
-        return arr.some((el) => JSON.stringify(el) === itemStr);
-    }
-
-    private async getConnection(): Promise<PoolConnection>
-    {
-        return this.pool.getConnection();
-    }
-
-    private async ensureInitialized(): Promise<void>
-    {
-        if (this.initialized)
-        {
-            return;
-        }
-
-        const sql = `
-            CREATE TABLE IF NOT EXISTS settings
-            (
-                id
-                INT
-                UNSIGNED
-                NOT
-                NULL
-                AUTO_INCREMENT,
-                \`key\`
-                VARCHAR
-            (
-                191
-            ) NOT NULL UNIQUE,
-                \`type\` VARCHAR
-            (
-                32
-            ) NOT NULL,
-                value_text TEXT NULL,
-                PRIMARY KEY
-            (
-                id
-            ),
-                INDEX idx_settings_key
-            (
-                \`key\`
-            )
-                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE =utf8mb4_unicode_ci;
-		`;
-
-        let conn: PoolConnection | null = null;
-
-        try
-        {
-            conn = await this.getConnection();
-            await conn.query(sql);
-            this.initialized = true;
-            this.logger.debug("[Settings] Ensured settings table exists.");
-        }
-        catch (error)
-        {
-            this.logger.error("[Settings] Failed to initialize settings table.", error as Error);
-            throw error;
-        }
-        finally
-        {
-            if (conn)
-            {
-                conn.release();
-            }
-        }
-    }
-
-    private inferType(value: SettingValue): SettingType
-    {
-        if (value === null || value === undefined)
-        {
-            return "raw";
-        }
-
-        if (typeof value === "string")
-        {
-            return "string";
-        }
-
-        if (typeof value === "number")
-        {
-            return Number.isInteger(value) ? "int" : "double";
-        }
-
-        if (typeof value === "boolean")
-        {
-            return "boolean";
-        }
-
-        if (typeof value === "bigint")
-        {
-            return "bigint";
-        }
-
-        if (value instanceof Date)
-        {
-            return "date";
-        }
-
-        return "json";
-    }
-
-    private serialize(type: SettingType, value: SettingValue): string | null
-    {
-        if (value === null || value === undefined)
-        {
-            return null;
-        }
-
-        switch (type)
-        {
-            case "string":
-                return String(value);
-            case "int":
-            case "bigint":
-            case "double":
-                return String(value);
-            case "boolean":
-                return (value as boolean) ? "1" : "0";
-            case "date":
-                return (value as Date).toISOString();
-            case "json":
-                return JSON.stringify(value);
-            case "raw":
-            default:
-                return String(value);
-        }
-    }
-
-    private deserialize(type: SettingType, raw: string | null): SettingValue
-    {
-        if (raw === null || raw === undefined)
-        {
-            return null;
-        }
-
-        switch (type)
-        {
-            case "string":
-                return raw;
-            case "int":
-                return parseInt(raw, 10);
-            case "bigint":
-                return BigInt(raw);
-            case "double":
-                return parseFloat(raw);
-            case "boolean":
-                return raw === "1" || raw.toLowerCase() === "true";
-            case "date":
-                return new Date(raw);
-            case "json":
-                try
-                {
-                    return JSON.parse(raw);
+                    if (id && memberSet.has(String(id))) return true;
                 }
-                catch
-                {
-                    return raw;
-                }
-            case "raw":
-            default:
-                return raw;
+            }
+            else if (typeof v === "string")
+            {
+                if (memberSet.has(v)) return true;
+            }
+        }
+        return false;
+    }
+
+    public async memberHasAnyRole(guildId: string, memberRoleIds: Iterable<string> | string[] | Set<string>): Promise<boolean>
+    {
+        return this.memberHasAnyRoleFromKeys(guildId, memberRoleIds, [
+            SettingKey.StaffRoles,
+        ]);
+    }
+
+    public async close(): Promise<void>
+    {
+        if (this.pool)
+        {
+            await this.pool.end();
+            this.pool = null;
+            this.initialized = false;
+            this.guildQueues.clear();
         }
     }
 }
 
-/**
- * Public static helper with a very simple API:
- * - Settings.get(key, default?)
- * - Settings.set(key, value, explicitType?)
- * - Settings.delete(key)
- * - Settings.list(type?)
- * - Settings.listTypes()
- *
- * Array helpers (stored as JSON arrays):
- * - Settings.getArray<T>(key)            → T[]  (empty array if not set)
- * - Settings.setArray<T>(key, array)     → replaces the whole array
- * - Settings.addToArray<T>(key, item)    → appends an item (no duplicates)
- * - Settings.removeFromArray<T>(key, item) → removes all occurrences of item
- * - Settings.hasInArray<T>(key, item)    → true if item is in the array
- */
 export class Settings
 {
     private static manager = SettingsManager.getInstance();
 
-    public static async get<T = SettingValue>(
-        key: string,
-        defaultValue: T | null = null,
-    ): Promise<T | null>
+    public static async initialize(): Promise<void>
     {
-        return this.manager.get<T>(key, defaultValue);
+        await this.manager.initialize();
     }
 
-    public static async set<T extends SettingValue>(
-        key: string,
-        value: T,
-        explicitType?: SettingType,
+    public static async get(
+        guildId: string,
+        key: SettingKey,
+    ): Promise<SettingValue | undefined>
+    {
+        return this.manager.get(guildId, key);
+    }
+
+    public static async set(
+        guildId: string,
+        key: SettingKey,
+        value: SettingValue | null,
     ): Promise<void>
     {
-        return this.manager.set<T>(key, value, explicitType);
+        return this.manager.set(guildId, key, value);
     }
 
-    public static async delete(key: string): Promise<void>
+    public static async getAll(
+        guildId: string,
+    ): Promise<Partial<Record<SettingKey, SettingValue>>>
     {
-        return this.manager.delete(key);
+        return this.manager.getAll(guildId);
     }
 
-    public static async getRecord(key: string): Promise<SettingRecord | null>
+    public static async getMany(
+        guildId: string,
+        keys: SettingKey[],
+    ): Promise<Partial<Record<SettingKey, SettingValue>>>
     {
-        return this.manager.getRecord(key);
+        return this.manager.getMany(guildId, keys);
     }
 
-    public static async list(type?: SettingType): Promise<SettingRecord[]>
+    public static async memberHasAnyRoleFromKeys(
+        guildId: string,
+        memberRoleIds: Iterable<string> | string[] | Set<string>,
+        keys: SettingKey[],
+    ): Promise<boolean>
     {
-        return this.manager.list(type);
+        return this.manager.memberHasAnyRoleFromKeys(guildId, memberRoleIds, keys);
     }
 
-    public static async listTypes(): Promise<{ type: SettingType; count: number }[]>
+    public static async memberHasAnyRole(
+        guildId: string,
+        memberRoleIds: Iterable<string> | string[] | Set<string>,
+    ): Promise<boolean>
     {
-        return this.manager.listTypes();
+        return this.manager.memberHasAnyRole(guildId, memberRoleIds);
     }
 
-    public static async getArray<T = any>(key: string): Promise<T[]>
+    public static async close(): Promise<void>
     {
-        return this.manager.getArray<T>(key);
-    }
-
-    public static async setArray<T = any>(key: string, items: T[]): Promise<void>
-    {
-        return this.manager.setArray<T>(key, items);
-    }
-
-    public static async addToArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        return this.manager.addToArray<T>(key, item);
-    }
-
-    public static async removeFromArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        return this.manager.removeFromArray<T>(key, item);
-    }
-
-    public static async hasInArray<T = any>(key: string, item: T): Promise<boolean>
-    {
-        return this.manager.hasInArray<T>(key, item);
+        return this.manager.close();
     }
 }

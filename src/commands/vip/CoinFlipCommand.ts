@@ -11,7 +11,7 @@ import { ExtendedClient } from "@/structures/Client";
 import { CommandCategory } from "@/types/CommandCategories";
 import { Delay } from "@/utils/Delay";
 import { ContainerBuilder, MessageFlags, SeparatorSpacingSize } from "discord.js";
-import { CustomEmoji } from "@/types/Emoji";
+import { Emoji } from "@/types/Emojis";
 
 @Category(CommandCategory.VIP)
 @VipChannel()
@@ -56,7 +56,7 @@ export default class CoinFlipCommand extends BaseSlashCommand
             );
 
         await interaction.reply({
-            content: `-# ${CustomEmoji.loading} Castor is flipping the coin...`,
+            content: `-# ${Emoji.Loading} Castor is flipping the coin...`,
         });
 
         Delay(1200).then(() =>

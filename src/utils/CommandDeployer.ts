@@ -1,7 +1,6 @@
 import { REST, Routes } from "discord.js";
 import { ExtendedClient } from "../structures/Client";
 import { BaseSlashCommand } from "../structures/base/commands/BaseSlashCommand";
-import { BaseMessageCommand } from "../structures/base/commands/BaseMessageCommand";
 import fs from "fs";
 import path from "path";
 
@@ -55,13 +54,6 @@ export class CommandDeployer
                         `[CommandDeployer] Loaded slash command: ${command.data.name} (${category}).`,
                     );
                 }
-                else if (CommandClass.prototype instanceof BaseMessageCommand)
-                {
-                    const command: BaseMessageCommand = new CommandClass(this.client);
-                    this.client.logger.debug(
-                        `[CommandDeployer] Loaded message command: ${command.name} (${category}).`,
-                    );
-                }
                 else
                 {
                     this.client.logger.warn(
@@ -79,23 +71,15 @@ export class CommandDeployer
             this.loadCommands();
 
             this.client.logger.info(
-                "[CommandDeployer] Clearing existing global application commands...",
-            );
-            await this.rest.put(Routes.applicationCommands(process.env.CLIENT_ID!), { body: [] });
-            this.client.logger.info(
-                "[CommandDeployer] Successfully cleared global application commands.",
-            );
-
-            this.client.logger.info(
-                `[CommandDeployer] Started refreshing ${this.commands.length} application (/) commands in guild: ${process.env.GUILD_ID!}.`,
+                `[CommandDeployer] Started refreshing ${this.commands.length} application (/) commands globally.`,
             );
             await this.rest.put(
-                Routes.applicationGuildCommands(process.env.CLIENT_ID!, process.env.GUILD_ID!),
+                Routes.applicationCommands(process.env.CLIENT_ID!),
                 { body: this.commands },
             );
 
             this.client.logger.info(
-                "[CommandDeployer] Successfully reloaded application (/) commands to guild.",
+                "[CommandDeployer] Successfully reloaded application (/) commands globally.",
             );
         }
         catch (error)
