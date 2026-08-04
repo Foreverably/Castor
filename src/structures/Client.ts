@@ -17,9 +17,6 @@ interface IntentOption
 const INTENT_OPTIONS: IntentOption[] = [
     { bit: GatewayIntentBits.Guilds, env: "INTENT_GUILDS", defaultEnabled: true },
     { bit: GatewayIntentBits.GuildMessages, env: "INTENT_GUILD_MESSAGES", defaultEnabled: true },
-    // Message Content is a privileged intent; it must be explicitly enabled in the
-    // Discord Developer Portal AND via this env flag, otherwise login fails with
-    // "Used disallowed intents". It defaults to OFF.
     { bit: GatewayIntentBits.MessageContent, env: "INTENT_MESSAGE_CONTENT", defaultEnabled: false },
     {
         bit: GatewayIntentBits.GuildMessageReactions,
