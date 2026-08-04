@@ -230,3 +230,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Based on [KSJaay's Castor](https://github.com/KSJaay/Alita/tree/Castor)
 - Originally built for the [No Text To Speech](https://discord.gg/ntts) community
 - Built on top of [discord.js](https://discord.js.org/)
+
+## Contributions
+
+- [JayyDoesDev](https://github.com/JayyDoesDev)
+- [GuikiPT](https://github.com/guikipt)
+- [Bek](https://github.com/bekfastbek)
+- [Zeonzip](https://github.com/zeonzip)
