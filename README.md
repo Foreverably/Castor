@@ -13,9 +13,6 @@
 
 A fun Discord bot based off of [KSJaay's Castor](https://github.com/KSJaay/Alita/tree/Castor) but completely rewritten in TypeScript with a lot more features. This was primarily made for the [No Text To Speech](https://discord.gg/ntts) server.
 
-> [!NOTE]
-> This is currently a beta branch and is not ready for production use. Pull requests are welcome but may be rejected if they don't fit the project's goals.
-
 ## Features
 
 ### Games & Entertainment
