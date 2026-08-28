@@ -19,7 +19,7 @@
     "dependencies": {
         "discord.js": "^14.23.2",
         "dotenv": "^16.4.5",
-        "mariadb": "^3.4.0",
+        "mariadb": "^3.5.3",
         "node-fetch": "^3.3.2",
         "playwright-core": "^1.60.0",
         "sharp": "^0.34.5"
