@@ -17,7 +17,7 @@
         "watch": "tsc -w"
     },
     "dependencies": {
-        "discord.js": "^14.23.2",
+        "discord.js": "^14.27.0",
         "dotenv": "^16.4.5",
         "mariadb": "^3.4.0",
         "node-fetch": "^3.3.2",
